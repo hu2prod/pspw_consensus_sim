@@ -7,7 +7,11 @@ class @Sequencer_controller
   node_color_list       : []
   
   play_state            : false
-  mode_hide_future      : true
+  # mode_hide_future      : true
+  mode_hide_future      : false
+  display_block         : true
+  display_tx_pow        : true
+  display_tx_pow_src_lines : true
   speed_scale           : 1
   show_help             : false
   speed_step            : 0.1
@@ -53,10 +57,10 @@ class @Sequencer_controller
       @ts_set @model.ts + diff
       @refresh()
     
-    @scheme.active_scheme.register "left",  (()=>rel_ts(-1000)), description: "-1 sec"
-    @scheme.active_scheme.register "right", (()=>rel_ts(+1000)), description: "+1 sec"
-    @scheme.active_scheme.register "comma", (()=>rel_ts(-100)), description: "-0.1 sec"
-    @scheme.active_scheme.register "dot",   (()=>rel_ts(+100)), description: "+0.1 sec"
+    @scheme.active_scheme.register "left",  (()=>rel_ts(-1000)),  description: "-1 sec"
+    @scheme.active_scheme.register "right", (()=>rel_ts(+1000)),  description: "+1 sec"
+    @scheme.active_scheme.register "comma", (()=>rel_ts( -100)),  description: "-0.1 sec"
+    @scheme.active_scheme.register "dot",   (()=>rel_ts( +100)),  description: "+0.1 sec"
     
     
   
@@ -92,10 +96,11 @@ class @Sequencer_controller
     # ###################################################################################################
     #    const
     # ###################################################################################################
-    {ts} = @model
+    {ts, ts_max} = @model
     
-    # TODO pattern_ -> node_
     # L1
+    block_color = "#AAFFAA"
+    block_drop_color = "#AAAAAA"
     pow_type_color = [
       "#00FFFF"
       "#0094FF"
@@ -104,7 +109,7 @@ class @Sequencer_controller
       "#B200FF"
       # "#FF00DC"
     ]
-    pattern_bar_size_y = 20
+    node_bar_size_y = 20
     pad = 4
     # Прим я скорее потом эти иконки уберу, но пока пусть будут
     node_icon_count = pow_type_color.length
@@ -112,13 +117,22 @@ class @Sequencer_controller
     node_icon_pad   = 2
     node_icon_pad_left = 4
     node_icon_offset_top = 3
+    
+    # внутри блока
+    node_icon2_size  = 10
+    node_icon2_pad   = 4
+    node_icon2_offset_left = 3
+    node_icon2_offset_top = 3
+    
     text_offset_top = -3
     bar_pad = 8
     ruler_pad = 20
     @left_panel_size_x = left_panel_size_x = 300
     
     # L2
-    font_size_y = pattern_bar_size_y-pad
+    node_icon2_size_2 = node_icon2_size/2
+    block_size_x= node_icon_count*(node_icon2_size + node_icon2_pad) + 3
+    font_size_y = node_bar_size_y-pad
     font_size_x = font_size_y/1.8 # MAGIC number
     # +1 т.к. еще иконка цвета ноды
     left_panel_text_x = (node_icon_count+1)*(node_icon_size + node_icon_pad) + node_icon_pad_left
@@ -160,7 +174,7 @@ class @Sequencer_controller
     for node, idx in @model.node_list
       node_state = node_state_list[idx]
       
-      y = 0.5 + idx * pattern_bar_size_y + node_icon_offset_top
+      y = 0.5 + idx * node_bar_size_y + node_icon_offset_top
       
       ctx.globalAlpha = 1
       for type_idx in [0 ... pow_type_color.length]
@@ -186,8 +200,8 @@ class @Sequencer_controller
     ctx.globalAlpha = 1
     # text
     for node, idx in @model.node_list
-      # y  = 0.5 - 1 + Math.round pad + (node_icon_offset)*(pattern_bar_size_y+bar_pad) + font_size_y + ruler_pad
-      y = 0.5 + -1 + (idx + 1) * pattern_bar_size_y + text_offset_top
+      # y  = 0.5 - 1 + Math.round pad + (node_icon_offset)*(node_bar_size_y+bar_pad) + font_size_y + ruler_pad
+      y = 0.5 + -1 + (idx + 1) * node_bar_size_y + text_offset_top
       ctx.fillText node.title, left_panel_text_x, y
       
       delimiter_y = 4 + 0.5+Math.round y
@@ -201,24 +215,88 @@ class @Sequencer_controller
     # ###################################################################################################
     #    tx_pow
     # ###################################################################################################
-    for node, idx in @model.node_list
-      for event in node.event_list
-        if @mode_hide_future
-          break    if event.ts > filter_b_ts
-        continue if event.type != "tx_pow_mine"
-        
+    if @display_tx_pow
+      for node, idx in @model.node_list
+        y = 0.5 + idx * node_bar_size_y + node_icon_offset_top
+        for event in node.event_list
+          if @mode_hide_future
+            break    if event.ts > filter_b_ts
+          continue if event.type != "tx_pow_mine"
+          
+          t = event.ts / ts_max
+          x = left_panel_size_x + display_size_x * t
+          ctx.fillStyle = pow_type_color[event.tx_pow_type]
+          ctx.fillRect x, y, node_icon_size, node_icon_size
     
     # ###################################################################################################
     #    blocks
     # ###################################################################################################
-    
+    if @display_block
+      for node, node_idx in @model.node_list
+        y = 0.5 + node_idx * node_bar_size_y + node_icon_offset_top
+        for event, event_idx in node.event_list
+          if @mode_hide_future
+            break    if event.ts > filter_b_ts
+          continue if event.type != "block"
+          
+          block_drop_ts = null
+          # немного калично, но всё же
+          for future_event_idx in [event_idx+1 ... node.event_list.length] by 1
+            future_event = node.event_list[future_event_idx]
+            break if future_event.type == "block" # not hide
+            if future_event.type == "block_drop"
+              if future_event.ts < filter_b_ts
+                block_drop_ts = future_event.ts
+          
+          t = event.ts / ts_max
+          x = 0.5+ left_panel_size_x + display_size_x * t
+          ctx.fillStyle = if block_drop_ts? then block_drop_color else block_color
+          
+          ctx.strokeStyle = "#000"
+          ctx.fillRect    x, y, block_size_x, node_icon_size
+          ctx.strokeRect  x, y, block_size_x, node_icon_size
+          
+          x += node_icon2_offset_left
+          y += node_icon2_offset_top
+          
+          for tx_pow in event.tx_pow_list
+            
+            if @display_tx_pow_src_lines and tx_pow.source_idx != node_idx
+              ctx.beginPath()
+              ctx.moveTo x+node_icon2_size_2, y+node_icon2_size_2
+              ctx.lineTo x+node_icon2_size_2, y+(node_bar_size_y * (tx_pow.source_idx - node_idx))
+              ctx.stroke()
+              ctx.closePath()
+            
+            ctx.fillStyle = pow_type_color[tx_pow.tx_pow_type]
+            ctx.fillRect    x, y, node_icon2_size, node_icon2_size
+            ctx.strokeRect  x, y, node_icon2_size, node_icon2_size
+            
+            x += node_icon2_size + node_icon2_pad
+          
+          if block_drop_ts
+            t = block_drop_ts / ts_max
+            x = 0.5+ left_panel_size_x + display_size_x * t
+            ctx.beginPath()
+            x_a = x
+            y_a = y
+            x_b = x+node_icon2_size
+            y_b = y+node_icon2_size
+            
+            ctx.moveTo x_a, y_a
+            ctx.lineTo x_b, y_b
+            ctx.moveTo x_a, y_b
+            ctx.lineTo x_b, y_a
+            ctx.stroke()
+            ctx.closePath()
+          
     # ###################################################################################################
     #    round_delimiter_ts_list
     # ###################################################################################################
     round_id = 0
     for delimiter_ts in @model.round_delimiter_ts_list
       round_id++ if delimiter_ts < ts
-      x = left_panel_size_x + (delimiter_ts / @model.ts_max) * display_size_x
+      x = left_panel_size_x + (delimiter_ts / ts_max) * display_size_x
       ctx.strokeStyle = "#F00"
       ctx.beginPath()
       ctx.moveTo x, 0.5+0
@@ -228,18 +306,19 @@ class @Sequencer_controller
     # ###################################################################################################
     #    vertical scrub
     # ###################################################################################################
-    x = left_panel_size_x + (ts / @model.ts_max) * display_size_x
+    x = left_panel_size_x + (ts / ts_max) * display_size_x
     x = 0.5+Math.round x
     
     ctx.strokeStyle = "#000"
+    ctx.fillStyle = "#000"
     
     ctx.beginPath()
     ctx.moveTo x, 0.5+0
     ctx.lineTo x, 0.5-1+size_y
     ctx.stroke()
     
-    x = size_x - pad
-    y = font_size_y
+    x = 0.5+size_x - pad
+    y = 0.5+font_size_y
     ctx.textAlign = "right"
     ctx.fillText "round \##{round_id+1} #{(ts/1000).toFixed(2).rjust 6}", x, y
     ctx.textAlign = "left"

@@ -81,8 +81,8 @@ module.exports =
               tx_pow_list : []
             }
             {
-              type : "block_shadow"
-              ts   : 300
+              type : "block_drop"
+              ts   : 400
               tx_pow_list : []
             }
           ]
@@ -112,7 +112,7 @@ module.exports =
         tr
           td {
             style :
-              width : 100
+              width : 250
           }
             Button {
               label : if @controller.play_state then "Stop" else "Play"
@@ -137,6 +137,33 @@ module.exports =
             value : @controller.mode_hide_future
             on_change : (mode_hide_future)=>
               @controller.mode_hide_future = mode_hide_future
+              @controller.refresh()
+              @force_update()
+          }
+        tr
+          td "Display tx_pow on timeline"
+          td Checkbox {
+            value     : @controller.display_tx_pow
+            on_change : (display_tx_pow)=>
+              @controller.display_tx_pow = display_tx_pow
+              @controller.refresh()
+              @force_update()
+          }
+        tr
+          td "Display block"
+          td Checkbox {
+            value     : @controller.display_block
+            on_change : (display_block)=>
+              @controller.display_block = display_block
+              @controller.refresh()
+              @force_update()
+          }
+        tr
+          td "Display block tx_pow усики"
+          td Checkbox {
+            value     : @controller.display_tx_pow_src_lines
+            on_change : (display_tx_pow_src_lines)=>
+              @controller.display_tx_pow_src_lines = display_tx_pow_src_lines
               @controller.refresh()
               @force_update()
           }
