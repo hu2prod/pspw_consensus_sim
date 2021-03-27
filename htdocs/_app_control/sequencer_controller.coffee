@@ -51,16 +51,14 @@ class @Sequencer_controller
     @scheme.active_scheme.register "num_minus", (()=>rel_speed(-@speed_step)), description: "decrease speed"
     
     
-    
     rel_ts = (diff)=>
-      debugger
       @ts_set @model.ts + diff
       @refresh()
     
-    @scheme.active_scheme.register "left",  (()=>rel_ts(-1000)),  description: "-1 sec"
-    @scheme.active_scheme.register "right", (()=>rel_ts(+1000)),  description: "+1 sec"
-    @scheme.active_scheme.register "comma", (()=>rel_ts( -100)),  description: "-0.1 sec"
-    @scheme.active_scheme.register "dot",   (()=>rel_ts( +100)),  description: "+0.1 sec"
+    @scheme.active_scheme.register "left",  (()=>rel_ts(-60000)),  description: "-1 min"
+    @scheme.active_scheme.register "right", (()=>rel_ts(+60000)),  description: "+1 min"
+    @scheme.active_scheme.register "comma", (()=>rel_ts( -1000)),  description: "-1 sec"
+    @scheme.active_scheme.register "dot",   (()=>rel_ts( +1000)),  description: "+1 sec"
     
     
   
@@ -114,6 +112,7 @@ class @Sequencer_controller
     # Прим я скорее потом эти иконки уберу, но пока пусть будут
     node_icon_count = pow_type_color.length
     node_icon_size  = 16
+    node_icon_size_timeline = 4
     node_icon_pad   = 2
     node_icon_pad_left = 4
     node_icon_offset_top = 3
@@ -171,10 +170,10 @@ class @Sequencer_controller
     
     
     # icons
-    for node, idx in @model.node_list
-      node_state = node_state_list[idx]
+    for node, node_idx in @model.node_list
+      node_state = node_state_list[node_idx]
       
-      y = 0.5 + idx * node_bar_size_y + node_icon_offset_top
+      y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
       
       ctx.globalAlpha = 1
       for type_idx in [0 ... pow_type_color.length]
@@ -189,7 +188,7 @@ class @Sequencer_controller
         ctx.fillRect x, y, node_icon_size, node_icon_size
       
       ctx.globalAlpha = 1
-      ctx.fillStyle = distinct_color_list[idx]
+      ctx.fillStyle = distinct_color_list[node_idx]
       x = pow_type_color.length*(node_icon_size + node_icon_pad) + node_icon_pad_left
       ctx.fillRect x, y, node_icon_size, node_icon_size
     
@@ -199,25 +198,35 @@ class @Sequencer_controller
     
     ctx.globalAlpha = 1
     # text
-    for node, idx in @model.node_list
+    for node, node_idx in @model.node_list
       # y  = 0.5 - 1 + Math.round pad + (node_icon_offset)*(node_bar_size_y+bar_pad) + font_size_y + ruler_pad
-      y = 0.5 + -1 + (idx + 1) * node_bar_size_y + text_offset_top
+      y = 0.5 + -1 + (node_idx + 2) * node_bar_size_y + text_offset_top
       ctx.fillText node.title, left_panel_text_x, y
       
       delimiter_y = 4 + 0.5+Math.round y
-      
+      # bottom line
       ctx.beginPath()
       ctx.moveTo 0, delimiter_y
       ctx.lineTo size_x, delimiter_y
       ctx.stroke()
       ctx.closePath()
     
+    # top line
+    y = 0.5 + -1 + 1 * node_bar_size_y + text_offset_top
+    delimiter_y = 4 + 0.5+Math.round y
+    
+    ctx.beginPath()
+    ctx.moveTo 0, delimiter_y
+    ctx.lineTo size_x, delimiter_y
+    ctx.stroke()
+    ctx.closePath()
+    
     # ###################################################################################################
     #    tx_pow
     # ###################################################################################################
     if @display_tx_pow
-      for node, idx in @model.node_list
-        y = 0.5 + idx * node_bar_size_y + node_icon_offset_top
+      for node, node_idx in @model.node_list
+        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
         for event in node.event_list
           if @mode_hide_future
             break    if event.ts > filter_b_ts
@@ -226,14 +235,14 @@ class @Sequencer_controller
           t = event.ts / ts_max
           x = left_panel_size_x + display_size_x * t
           ctx.fillStyle = pow_type_color[event.tx_pow_type]
-          ctx.fillRect x, y, node_icon_size, node_icon_size
+          ctx.fillRect x, y, node_icon_size_timeline, node_icon_size
     
     # ###################################################################################################
     #    blocks
     # ###################################################################################################
     if @display_block
       for node, node_idx in @model.node_list
-        y = 0.5 + node_idx * node_bar_size_y + node_icon_offset_top
+        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
         for event, event_idx in node.event_list
           if @mode_hide_future
             break    if event.ts > filter_b_ts

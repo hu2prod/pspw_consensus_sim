@@ -35,6 +35,8 @@ module.exports =
                     _class = "selected" if scenario_idx == @state.scenario_selected_idx
                     tr {
                       class : _class
+                      style :
+                        cursor : "pointer"
                       on_click : ()=>
                         @set_state scenario_selected_idx : scenario_idx
                     }

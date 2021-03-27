@@ -15,6 +15,7 @@ window.scenario_gen = (opt = {})->
       
       block_generation_duration_min
       block_generation_duration_max
+      target_pow_count_per_round
       
       
       pow_type_count
@@ -33,9 +34,11 @@ window.scenario_gen = (opt = {})->
   
   block_generation_duration_min ?= 100
   block_generation_duration_max ?= 500
+  target_pow_count_per_round    ?= 100
   
   pow_type_count ?= 4
-  pow_diff       ?= 256*1024
+  # тут проблема что target_pow_count_per_round это каждой, а мы разбрасываем
+  pow_diff       ?= 100*node_hashrate*node_count
   
   # ###################################################################################################
   #    logical
@@ -55,6 +58,7 @@ window.scenario_gen = (opt = {})->
     node_list.push node = {
       title      : "node #{node_idx+1}"
       event_list : []
+      round_grouped_pow_list : []
     }
     # TODO node hashrate for each pow
   
@@ -63,18 +67,25 @@ window.scenario_gen = (opt = {})->
   # ###################################################################################################
   
   for ts in [0 ... ts_max] by pow_simulation_step
+    round_idx = ts//round_duration
     for node in node_list
       curr_node_hashrate = node_hashrate
       
       hash_count = pow_simulation_step*curr_node_hashrate / 1000
       for i in [0 ... hash_count] by 1
         if rand_range(0, pow_diff) == 0
-          node.event_list.push {
+          node.event_list.push curr_pow = {
             type : "tx_pow_mine"
             ts
             tx_pow_type : rand_range(0, 4) # странная логика, но пускай будет так для красоты
           }
-      
+          node.round_grouped_pow_list[round_idx] ?= []
+          node.round_grouped_pow_list[round_idx].push curr_pow
+  
+  # ###################################################################################################
+  #    генерация расписания поездов
+  # ###################################################################################################
+  
   
   # ###################################################################################################
   #    finalize
