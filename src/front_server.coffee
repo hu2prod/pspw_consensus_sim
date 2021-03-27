@@ -30,7 +30,7 @@ bundle.feature_hash.hotreload = true
 @content_htdocs_server = delivery.start @content_htdocs_server_opt = {
   htdocs : "htdocs"
   hotreload  : !!argv.watch
-  title : "hello world webcom"
+  title : "pspw consensus sim"
   bundle
   port    : argv.port
   ws_port : argv.ws_port

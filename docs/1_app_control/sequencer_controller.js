@@ -16,6 +16,8 @@
 
     Sequencer_controller.prototype.play_state = false;
 
+    Sequencer_controller.prototype.mode_hide_future = true;
+
     Sequencer_controller.prototype.canvas_controller = function(canvas_hash) {
       var $canvas_panel_fg;
       if (canvas_hash.panel_fg) {
@@ -174,8 +176,10 @@
         _ref7 = node.event_list;
         for (_p = 0, _len5 = _ref7.length; _p < _len5; _p++) {
           event = _ref7[_p];
-          if (event.ts > filter_b_ts) {
-            break;
+          if (this.mode_hide_future) {
+            if (event.ts > filter_b_ts) {
+              break;
+            }
           }
           if (event.type !== "tx_pow_mine") {
             continue;
@@ -244,6 +248,9 @@
     Sequencer_controller.prototype.start_ts = 0;
 
     Sequencer_controller.prototype.play = function() {
+      if (this._animation_interval) {
+        clearInterval(this._animation_interval);
+      }
       this.play_state = true;
       this.com.force_update();
       if (this.model.ts === this.model.ts_max) {
@@ -268,7 +275,8 @@
     Sequencer_controller.prototype.stop = function() {
       this.play_state = false;
       this.com.force_update();
-      return clearInterval(this._animation_interval);
+      clearInterval(this._animation_interval);
+      return this._animation_interval = null;
     };
 
     Sequencer_controller.prototype.toggle_play = function() {
@@ -288,7 +296,7 @@
       t = Math.min(1, t);
       ts = t * this.model.ts_max;
       this.model.ts = ts;
-      return this.refresh();
+      return this.play();
     };
 
     return Sequencer_controller;
