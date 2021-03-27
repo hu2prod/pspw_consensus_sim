@@ -9,6 +9,8 @@ class @Sequencer_controller
   play_state            : false
   mode_hide_future      : true
   speed_scale           : 1
+  show_help             : false
+  speed_step            : 0.1
   
   canvas_controller: (canvas_hash)->
     if canvas_hash.panel_fg
@@ -29,7 +31,33 @@ class @Sequencer_controller
       @model.ts = 0
       @refresh()
     
-    @scheme.active_scheme.register "home", fn, description: "Go to start of video"
+    @scheme.active_scheme.register "home", fn, description: "Go to start"
+    
+    fn = ()=>
+      @show_help = !@show_help
+      @com.force_update()
+    @scheme.active_scheme.register "f1", fn, description: "toggle help"
+    
+    rel_speed = (step)=>
+      new_speed = +(@speed_scale + step).toFixed(2)
+      if new_speed > 0
+        @speed_scale_set new_speed
+    
+    @scheme.active_scheme.register "num_plus",  (()=>rel_speed(+@speed_step)), description: "increase speed"
+    @scheme.active_scheme.register "num_minus", (()=>rel_speed(-@speed_step)), description: "decrease speed"
+    
+    
+    
+    rel_ts = (diff)=>
+      debugger
+      @ts_set @model.ts + diff
+      @refresh()
+    
+    @scheme.active_scheme.register "left",  (()=>rel_ts(-1000)), description: "-1 sec"
+    @scheme.active_scheme.register "right", (()=>rel_ts(+1000)), description: "+1 sec"
+    @scheme.active_scheme.register "comma", (()=>rel_ts(-100)), description: "-0.1 sec"
+    @scheme.active_scheme.register "dot",   (()=>rel_ts(+100)), description: "+0.1 sec"
+    
     
   
   delete : ()->
@@ -216,7 +244,6 @@ class @Sequencer_controller
     ctx.fillText "round \##{round_id+1} #{(ts/1000).toFixed(2).rjust 6}", x, y
     ctx.textAlign = "left"
     
-    
     return
   
   
@@ -261,6 +288,8 @@ class @Sequencer_controller
   start_ts : 0
   
   ts_set : (ts)->
+    ts = Math.max 0, ts
+    ts = Math.min @model.ts_max, ts
     @model.ts = ts
     @start_ts = Date.now() - @model.ts/@speed_scale
   
@@ -309,6 +338,6 @@ class @Sequencer_controller
     @refresh()
   
   speed_scale_set : (speed_scale)->
-    puts speed_scale
     @speed_scale = speed_scale
     @ts_set @model.ts
+    @com.force_update()

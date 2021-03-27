@@ -93,12 +93,22 @@ module.exports =
   render : ()->
     size_x = @props.width  or @props.size_x
     size_y = @props.height or @props.size_y
-    
     table {
       style:
         width : "100%"
     }
       tbody
+        tr
+          td
+            # perf (draw, but hide)
+            div {
+              style:
+                display : if @controller.show_help then "" else "none"
+            }
+              if @controller.scheme?.active_scheme
+                Keyboard_help_multi {
+                  scheme : @controller.scheme.active_scheme
+                }
         tr
           td {
             style :
@@ -112,7 +122,7 @@ module.exports =
           td {
             style:
               color : "#777"
-          }, "If you focus timeline you can use some hotkeys"
+          }, "If you focus timeline you can use some hotkeys. Focus and press F1 for help"
             
         tr
           td "Speed"
@@ -120,6 +130,15 @@ module.exports =
             value : @controller.speed_scale
             on_change : (speed_scale)=>
               @controller.speed_scale_set speed_scale
+          }
+        tr
+          td "Hide future"
+          td Checkbox {
+            value : @controller.mode_hide_future
+            on_change : (mode_hide_future)=>
+              @controller.mode_hide_future = mode_hide_future
+              @controller.refresh()
+              @force_update()
           }
         tr
           td {colSpan : 2}
