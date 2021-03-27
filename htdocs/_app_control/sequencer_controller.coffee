@@ -16,6 +16,11 @@ class @Sequencer_controller
   show_help             : false
   speed_step            : 0.1
   
+  zoom                  : 1
+  offset_x              : 0 # mouse coord (НЕ grid)
+  zoom_mult_wheel       : 1.2
+  zoom_mult_keyb        : 1.2
+  
   canvas_controller: (canvas_hash)->
     if canvas_hash.panel_fg
       return if !@$canvas_panel_fg = $canvas_panel_fg = canvas_hash.panel_fg
@@ -60,6 +65,7 @@ class @Sequencer_controller
     @scheme.active_scheme.register "comma", (()=>rel_ts( -1000)),  description: "-1 sec"
     @scheme.active_scheme.register "dot",   (()=>rel_ts( +1000)),  description: "+1 sec"
     
+    # TODO zoom_in, zoom_out
     
   
   delete : ()->
@@ -95,6 +101,10 @@ class @Sequencer_controller
     #    const
     # ###################################################################################################
     {ts, ts_max} = @model
+    {
+      offset_x
+      zoom
+    } = @
     
     # L1
     block_color = "#AAFFAA"
@@ -114,7 +124,7 @@ class @Sequencer_controller
     node_icon_size  = 16
     node_icon_size_timeline = 4
     node_icon_pad   = 2
-    node_icon_pad_left = 4
+    node_icon_pad_left = 3
     node_icon_offset_top = 3
     
     # внутри блока
@@ -161,13 +171,114 @@ class @Sequencer_controller
       node_state
     
     # ###################################################################################################
+    #    tx_pow
+    # ###################################################################################################
+    if @display_tx_pow
+      for node, node_idx in @model.node_list
+        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
+        for event in node.event_list
+          if @mode_hide_future
+            break    if event.ts > filter_b_ts
+          continue if event.type != "tx_pow_mine"
+          
+          t = event.ts / ts_max
+          x = display_size_x * t
+          x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          ctx.fillStyle = pow_type_color[event.tx_pow_type]
+          ctx.fillRect x, y, node_icon_size_timeline, node_icon_size
+    
+    # ###################################################################################################
+    #    blocks
+    # ###################################################################################################
+    if @display_block
+      for node, node_idx in @model.node_list
+        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
+        for event, event_idx in node.event_list
+          if @mode_hide_future
+            break    if event.ts > filter_b_ts
+          continue if event.type != "block"
+          
+          block_drop_ts = null
+          # немного калично, но всё же
+          for future_event_idx in [event_idx+1 ... node.event_list.length] by 1
+            future_event = node.event_list[future_event_idx]
+            break if future_event.type == "block" # not hide
+            if future_event.type == "block_drop"
+              if future_event.ts < filter_b_ts
+                block_drop_ts = future_event.ts
+          
+          t = event.ts / ts_max
+          x = display_size_x * t
+          x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          ctx.fillStyle = if block_drop_ts? then block_drop_color else block_color
+          
+          ctx.strokeStyle = "#000"
+          ctx.fillRect    x, y, block_size_x, node_icon_size
+          ctx.strokeRect  x, y, block_size_x, node_icon_size
+          
+          x += node_icon2_offset_left
+          y += node_icon2_offset_top
+          
+          for tx_pow in event.tx_pow_list
+            
+            if @display_tx_pow_src_lines and tx_pow.source_idx != node_idx
+              ctx.beginPath()
+              ctx.moveTo x+node_icon2_size_2, y+node_icon2_size_2
+              ctx.lineTo x+node_icon2_size_2, y+(node_bar_size_y * (tx_pow.source_idx - node_idx))
+              ctx.stroke()
+              ctx.closePath()
+            
+            ctx.fillStyle = pow_type_color[tx_pow.tx_pow_type]
+            ctx.fillRect    x, y, node_icon2_size, node_icon2_size
+            ctx.strokeRect  x, y, node_icon2_size, node_icon2_size
+            
+            x += node_icon2_size + node_icon2_pad
+          
+          if block_drop_ts
+            t = block_drop_ts / ts_max
+            x = display_size_x * t
+            x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+            ctx.beginPath()
+            x_a = x
+            y_a = y
+            x_b = x+node_icon2_size
+            y_b = y+node_icon2_size
+            
+            ctx.moveTo x_a, y_a
+            ctx.lineTo x_b, y_b
+            ctx.moveTo x_a, y_b
+            ctx.lineTo x_b, y_a
+            ctx.stroke()
+            ctx.closePath()
+          
+    # ###################################################################################################
+    #    round_delimiter_ts_list
+    # ###################################################################################################
+    ctx.textAlign = "right"
+    round_id = 0
+    for delimiter_ts, idx in @model.round_delimiter_ts_list
+      round_id++ if delimiter_ts < ts
+      x = (delimiter_ts / ts_max) * display_size_x
+      x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+      ctx.strokeStyle = "#F00"
+      ctx.beginPath()
+      ctx.moveTo x, 0.5+0
+      ctx.lineTo x, 0.5-1+size_y
+      ctx.stroke()
+      
+      y = 0.5+font_size_y
+      ctx.fillStyle = "#F00"
+      ctx.fillText "round \##{idx+1} ", x, y
+    
+    
+    # ###################################################################################################
     #    left panel
     # ###################################################################################################
     ctx.fillStyle = "rgba(250,250,255,0.9)"
     ctx.strokeStyle = "#000"
     ctx.fillRect   0.5+1, 0.5+1, left_panel_size_x-1, size_y-2
     ctx.strokeRect 0.5+0, 0.5+0, left_panel_size_x-2, size_y-1
-    
+    ctx.textAlign = "left"
     
     # icons
     for node, node_idx in @model.node_list
@@ -178,13 +289,13 @@ class @Sequencer_controller
       ctx.globalAlpha = 1
       for type_idx in [0 ... pow_type_color.length]
         ctx.fillStyle = pow_type_color_disabled
-        x = type_idx*(node_icon_size + node_icon_pad) + node_icon_pad_left
+        x = 0.5 + type_idx*(node_icon_size + node_icon_pad) + node_icon_pad_left
         ctx.fillRect x, y, node_icon_size, node_icon_size
       
       for type_idx in [0 ... pow_type_color.length]
         ctx.globalAlpha = node_state.pow_icon_opacity[type_idx]
         ctx.fillStyle = pow_type_color[type_idx] # возможно чтобы меньше переключать цвета нужно перетасовать циклы
-        x = type_idx*(node_icon_size + node_icon_pad) + node_icon_pad_left
+        x = 0.5 + type_idx*(node_icon_size + node_icon_pad) + node_icon_pad_left
         ctx.fillRect x, y, node_icon_size, node_icon_size
       
       ctx.globalAlpha = 1
@@ -222,106 +333,10 @@ class @Sequencer_controller
     ctx.closePath()
     
     # ###################################################################################################
-    #    tx_pow
-    # ###################################################################################################
-    if @display_tx_pow
-      for node, node_idx in @model.node_list
-        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
-        for event in node.event_list
-          if @mode_hide_future
-            break    if event.ts > filter_b_ts
-          continue if event.type != "tx_pow_mine"
-          
-          t = event.ts / ts_max
-          x = left_panel_size_x + display_size_x * t
-          ctx.fillStyle = pow_type_color[event.tx_pow_type]
-          ctx.fillRect x, y, node_icon_size_timeline, node_icon_size
-    
-    # ###################################################################################################
-    #    blocks
-    # ###################################################################################################
-    if @display_block
-      for node, node_idx in @model.node_list
-        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
-        for event, event_idx in node.event_list
-          if @mode_hide_future
-            break    if event.ts > filter_b_ts
-          continue if event.type != "block"
-          
-          block_drop_ts = null
-          # немного калично, но всё же
-          for future_event_idx in [event_idx+1 ... node.event_list.length] by 1
-            future_event = node.event_list[future_event_idx]
-            break if future_event.type == "block" # not hide
-            if future_event.type == "block_drop"
-              if future_event.ts < filter_b_ts
-                block_drop_ts = future_event.ts
-          
-          t = event.ts / ts_max
-          x = 0.5+ left_panel_size_x + display_size_x * t
-          ctx.fillStyle = if block_drop_ts? then block_drop_color else block_color
-          
-          ctx.strokeStyle = "#000"
-          ctx.fillRect    x, y, block_size_x, node_icon_size
-          ctx.strokeRect  x, y, block_size_x, node_icon_size
-          
-          x += node_icon2_offset_left
-          y += node_icon2_offset_top
-          
-          for tx_pow in event.tx_pow_list
-            
-            if @display_tx_pow_src_lines and tx_pow.source_idx != node_idx
-              ctx.beginPath()
-              ctx.moveTo x+node_icon2_size_2, y+node_icon2_size_2
-              ctx.lineTo x+node_icon2_size_2, y+(node_bar_size_y * (tx_pow.source_idx - node_idx))
-              ctx.stroke()
-              ctx.closePath()
-            
-            ctx.fillStyle = pow_type_color[tx_pow.tx_pow_type]
-            ctx.fillRect    x, y, node_icon2_size, node_icon2_size
-            ctx.strokeRect  x, y, node_icon2_size, node_icon2_size
-            
-            x += node_icon2_size + node_icon2_pad
-          
-          if block_drop_ts
-            t = block_drop_ts / ts_max
-            x = 0.5+ left_panel_size_x + display_size_x * t
-            ctx.beginPath()
-            x_a = x
-            y_a = y
-            x_b = x+node_icon2_size
-            y_b = y+node_icon2_size
-            
-            ctx.moveTo x_a, y_a
-            ctx.lineTo x_b, y_b
-            ctx.moveTo x_a, y_b
-            ctx.lineTo x_b, y_a
-            ctx.stroke()
-            ctx.closePath()
-          
-    # ###################################################################################################
-    #    round_delimiter_ts_list
-    # ###################################################################################################
-    ctx.textAlign = "right"
-    round_id = 0
-    for delimiter_ts, idx in @model.round_delimiter_ts_list
-      round_id++ if delimiter_ts < ts
-      x = left_panel_size_x + (delimiter_ts / ts_max) * display_size_x
-      ctx.strokeStyle = "#F00"
-      ctx.beginPath()
-      ctx.moveTo x, 0.5+0
-      ctx.lineTo x, 0.5-1+size_y
-      ctx.stroke()
-      
-      y = 0.5+font_size_y
-      ctx.fillStyle = "#F00"
-      ctx.fillText "round \##{idx+1} ", x, y
-    
-    # ###################################################################################################
     #    vertical scrub
     # ###################################################################################################
-    x = left_panel_size_x + (ts / ts_max) * display_size_x
-    x = 0.5+Math.round x
+    x = (ts / ts_max) * display_size_x
+    x = 0.5 + left_panel_size_x +  Math.round x*zoom + offset_x
     
     ctx.strokeStyle = "#000"
     ctx.fillStyle = "#000"
@@ -336,8 +351,8 @@ class @Sequencer_controller
     
     ts = Math.round ts
     time_str = tsd_fmt ts, "hh:MM:SS.ms"
+    ctx.textAlign = "right"
     ctx.fillText "round \##{round_id+1} #{time_str}", x, y
-    ctx.textAlign = "left"
     
     return
   
@@ -355,27 +370,56 @@ class @Sequencer_controller
   # ###################################################################################################
   #    controls (direct handlers)
   # ###################################################################################################
-  _is_mouse_down : false
+  _mouse_mode : "none"
+  
   mouse_down : (event, layer_name)->
-    {x,y} = rel_mouse_coords event
+    {x:mx,x:my} = rel_mouse_coords event
+    {x:gx,y:gy} = @get_grid_coord mx, my
     
     switch layer_name
       when "panel_fg"
-        @_is_mouse_down = true
-        @seek x
+        switch event.nativeEvent.which
+          when 1 # left
+            @_mouse_mode = "seek"
+          when 2 # wheel
+            @_mouse_mode = "drag"
+        
+        @seek gx
   
   mouse_up   : (event, layer_name)->
-    @_is_mouse_down = false
+    @_mouse_mode = "none"
   
+  _last_mouse_event_x : 0
+  _last_mouse_event_y : 0
+  _last_grid_x : 0
+  _last_grid_y : 0
   mouse_move : (event, layer_name)->
-    {x,y} = rel_mouse_coords event
-    if @_is_mouse_down
-      @seek x
+    {x:mx,y:my} = rel_mouse_coords event
+    {x:gx,y:gy} = @get_grid_coord mx, my
+    # puts "move", gx, gy
+    switch @_mouse_mode
+      when "seek"
+        @seek gx
+      when "drag"
+        @offset_x += mx - @_last_mouse_event_x
+        @refresh()
     
+    @_last_mouse_event_x = mx
+    @_last_mouse_event_y = my
+    @_last_grid_x = gx
+    @_last_grid_y = gy
+    return
+  
+  mouse_wheel : (e)->
+    if e.deltaY < 0
+      @zoom_adjust @zoom_mult_wheel
+    else
+      @zoom_adjust 1/@zoom_mult_wheel
     return
   
   key_down : (event)->
     @scheme.keypressed event.nativeEvent
+  
   # ###################################################################################################
   #    L2 controls
   # ###################################################################################################
@@ -423,10 +467,10 @@ class @Sequencer_controller
     else
       @play()
   
-  seek : (x)->
+  seek : (gx)->
     {size_x, left_panel_size_x} = @
-    display_size_x = size_x - left_panel_size_x
-    t = (x - left_panel_size_x) / display_size_x
+    display_size_x = (size_x - left_panel_size_x)
+    t = (gx - @offset_x/@zoom)  / display_size_x
     t = Math.max 0, t
     t = Math.min 1, t
     ts = t * @model.ts_max
@@ -437,3 +481,29 @@ class @Sequencer_controller
     @speed_scale = speed_scale
     @ts_set @model.ts
     @com.force_update()
+  
+  get_grid_coord : (x = @_last_mouse_event_x, y = @_last_mouse_event_y)->
+    ret = {
+      x : (x - @left_panel_size_x)/@zoom
+      # y : y/@zoom*devicePixelRatio
+      y
+    }
+  
+  zoom_in : ()->
+    @zoom_adjust @zoom_mult_keyb
+    return
+  
+  zoom_out : ()->
+    @zoom_adjust 1/@zoom_mult_keyb
+    return
+  
+  zoom_adjust : (mult)->
+    gx_1 = (@_last_mouse_event_x - @left_panel_size_x - @offset_x)/@zoom
+    
+    @zoom *= mult
+    
+    @offset_x = @_last_mouse_event_x - @left_panel_size_x - gx_1*@zoom
+    
+    @refresh()
+    return
+  
