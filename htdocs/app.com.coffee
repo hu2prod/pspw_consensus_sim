@@ -1,4 +1,19 @@
 module.exports =
+  state:
+    scenario_selected_idx : 0
+  
+  mount : ()->
+    @scenario_list = [
+      {
+        title : "Scenario mining 4 rounds"
+        value : scenario_gen()
+      }
+      {
+        title : "Scenario sample"
+        value : scenario_sample
+      }
+    ]
+    
   render : ()->
     table {
       style:
@@ -9,16 +24,25 @@ module.exports =
           td {
             style:
               width : 300
+              verticalAlign : "top"
           }
-            scenario_list = [
-              {
-                title: "Scenario mining 4 rounds"
-              }
-            ]
+            
             table {class : "table"}
               tbody
-                for v in scenario_list
-                  tr # TODO on_click
-                    td v.title
-          td
-            Sequencer_panel {}
+                for scenario, scenario_idx in @scenario_list
+                  do (scenario, scenario_idx)=>
+                    _class = ""
+                    _class = "selected" if scenario_idx == @state.scenario_selected_idx
+                    tr {
+                      class : _class
+                      on_click : ()=>
+                        @set_state scenario_selected_idx : scenario_idx
+                    }
+                      td scenario.title
+          td {
+            style:
+              verticalAlign : "top"
+          }
+            Sequencer_panel {
+              value : @scenario_list[@state.scenario_selected_idx].value
+            }

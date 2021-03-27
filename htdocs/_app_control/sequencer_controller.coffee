@@ -12,7 +12,7 @@ class @Sequencer_controller
   display_block         : true
   display_tx_pow        : true
   display_tx_pow_src_lines : true
-  speed_scale           : 1
+  speed_scale           : 100
   show_help             : false
   speed_step            : 0.1
   
@@ -142,11 +142,11 @@ class @Sequencer_controller
     
     node_state_list = []
     
-    pow_blink_duration = 1000
+    pow_blink_duration = 1000 * @speed_scale
     
     # ed_ts event delta timestamp
     
-    filter_a_ts = ts - 1000
+    filter_a_ts = ts - 1000 * @speed_scale
     filter_b_ts = ts
     for node, idx in @model.node_list
       node_state_list.push node_state =
@@ -293,8 +293,9 @@ class @Sequencer_controller
     # ###################################################################################################
     #    round_delimiter_ts_list
     # ###################################################################################################
+    ctx.textAlign = "right"
     round_id = 0
-    for delimiter_ts in @model.round_delimiter_ts_list
+    for delimiter_ts, idx in @model.round_delimiter_ts_list
       round_id++ if delimiter_ts < ts
       x = left_panel_size_x + (delimiter_ts / ts_max) * display_size_x
       ctx.strokeStyle = "#F00"
@@ -302,6 +303,10 @@ class @Sequencer_controller
       ctx.moveTo x, 0.5+0
       ctx.lineTo x, 0.5-1+size_y
       ctx.stroke()
+      
+      y = 0.5+font_size_y
+      ctx.fillStyle = "#F00"
+      ctx.fillText "round \##{idx+1} ", x, y
     
     # ###################################################################################################
     #    vertical scrub
@@ -319,8 +324,10 @@ class @Sequencer_controller
     
     x = 0.5+size_x - pad
     y = 0.5+font_size_y
-    ctx.textAlign = "right"
-    ctx.fillText "round \##{round_id+1} #{(ts/1000).toFixed(2).rjust 6}", x, y
+    
+    ts = Math.round ts
+    time_str = tsd_fmt ts, "hh:MM:SS.ms"
+    ctx.fillText "round \##{round_id+1} #{time_str}", x, y
     ctx.textAlign = "left"
     
     return
@@ -367,6 +374,7 @@ class @Sequencer_controller
   start_ts : 0
   
   ts_set : (ts)->
+    ts = Math.round ts
     ts = Math.max 0, ts
     ts = Math.min @model.ts_max, ts
     @model.ts = ts
