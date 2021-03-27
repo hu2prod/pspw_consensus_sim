@@ -3,14 +3,38 @@ module.exports =
     scenario_selected_idx : 0
   
   mount : ()->
+    scenario = scenario_gen()
     @scenario_list = [
       {
-        title : "Scenario mining 4 rounds"
-        value : scenario_gen()
+        title : "Сороконожка"
+        value : scenario
+        pref_set : {}
       }
       {
-        title : "Scenario sample"
+        title : "Ужас летящий на крыльях ночи"
+        value : scenario
+        pref_set :
+          autotrack         : true
+          mode_hide_future  : true
+          zoom              : 40
+          autoplay          : true
+      }
+      {
+        title : "Ну можно же нормальную валидацию"
+        value : scenario
+        pref_set :
+          speed_scale       : 20
+          ts                : 2.05*60*60*1000
+          autotrack         : true
+          mode_hide_future  : true
+          zoom              : 40
+          autoplay          : true
+      }
+      {
+        title : "3 блока не считая собаки"
         value : scenario_sample
+        pref_set :
+          speed_scale : 1
       }
     ]
     
@@ -45,7 +69,9 @@ module.exports =
             style:
               verticalAlign : "top"
           }
+            scenario_set = @scenario_list[@state.scenario_selected_idx]
             Sequencer_panel {
-              value : @scenario_list[@state.scenario_selected_idx].value
-              height: 500
+              value   : scenario_set.value
+              pref_set: scenario_set.pref_set
+              height  : 500
             }

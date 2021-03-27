@@ -3,12 +3,31 @@ module.exports =
     @controller = new Sequencer_controller
     @controller.com = @
     @controller.model = @props.value
+    obj_set @controller, @props.pref_set
   
   props_change : (new_props)->
     if new_props.value != @props.value
       @controller.model = new_props.value
-      @controller.refresh()
     
+    if new_props.pref_set != @props.pref_set
+      @controller.offset_x = 0
+      
+      new_props.pref_set.mode_hide_future ?= false
+      new_props.pref_set.autotrack    ?= false
+      new_props.pref_set.speed_scale  ?= 100
+      new_props.pref_set.zoom         ?= 1
+      
+      obj_set @controller, new_props.pref_set
+      
+      @controller.ts_set new_props.pref_set.ts ? 0
+      
+      if new_props.pref_set.autoplay
+        @controller.play()
+      else
+        @controller.stop()
+      
+    
+    @controller.refresh()
   
   render : ()->
     size_x = @props.width  or @props.size_x

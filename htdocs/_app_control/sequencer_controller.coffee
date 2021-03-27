@@ -195,7 +195,8 @@ class @Sequencer_controller
           
           t = event.ts / ts_max
           x = display_size_x * t
-          x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          # x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          x = 0.5 + left_panel_size_x + x*zoom + offset_x
           ctx.fillStyle = pow_type_color[event.tx_pow_type]
           ctx.fillRect x, y, node_icon_size_timeline, node_icon_size
     
@@ -223,7 +224,8 @@ class @Sequencer_controller
           
           t = event.ts / ts_max
           x = display_size_x * t
-          x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          # x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+          x = 0.5 + left_panel_size_x + x*zoom + offset_x
           ctx.fillStyle = if block_drop_ts? then block_drop_color else block_color
           
           this_node_icon_count = Math.max 1, event.tx_pow_list.length
@@ -254,7 +256,8 @@ class @Sequencer_controller
           if block_drop_ts
             t = block_drop_ts / ts_max
             x = display_size_x * t
-            x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+            # x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
+            x = 0.5 + left_panel_size_x + x*zoom + offset_x
             ctx.beginPath()
             x_a = x
             y_a = y
