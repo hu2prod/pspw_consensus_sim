@@ -32,6 +32,8 @@
 
     Sequencer_controller.prototype.show_help = false;
 
+    Sequencer_controller.prototype.autotrack = false;
+
     Sequencer_controller.prototype.speed_step = 0.1;
 
     Sequencer_controller.prototype.zoom = 1;
@@ -168,7 +170,7 @@
                     parent: ___iced_passed_deferral
                   });
                   requestAnimationFrame(__iced_deferrals.defer({
-                    lineno: 71
+                    lineno: 72
                   }));
                   __iced_deferrals._fulfill();
                 })(function() {
@@ -557,13 +559,18 @@
       }
       return this._animation_interval = setInterval((function(_this) {
         return function() {
-          var ts;
+          var display_size_x, ts, ts_to_px;
           ts = (Date.now() - _this.start_ts) * _this.speed_scale;
           if (ts >= _this.model.ts_max) {
             ts = _this.model.ts_max;
             _this.stop();
           }
           _this.model.ts = ts;
+          if (_this.autotrack) {
+            display_size_x = _this.size_x - _this.left_panel_size_x;
+            ts_to_px = display_size_x / _this.model.ts_max;
+            _this.offset_x = display_size_x / 2 - _this.zoom * ts * ts_to_px;
+          }
           return _this.refresh();
         };
       })(this), 10);

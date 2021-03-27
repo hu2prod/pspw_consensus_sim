@@ -114,6 +114,17 @@
                 }
               }));
             });
+            tr(function() {
+              td("autotrack");
+              return td(Checkbox({
+                value: _this.controller.autotrack,
+                on_change: function(autotrack) {
+                  _this.controller.autotrack = autotrack;
+                  _this.controller.refresh();
+                  return _this.force_update();
+                }
+              }));
+            });
             return tr(function() {
               return td({
                 colSpan: 2
