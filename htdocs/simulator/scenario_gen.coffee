@@ -49,8 +49,6 @@ window.scenario_gen = (opt = {})->
   ts_max ?= round_duration*block_round_count
   
   round_delimiter_ts_list = []
-  for idx in [1 ... block_round_count]
-    round_delimiter_ts_list.push round_duration*idx
   
   # ###################################################################################################
   #    physical
@@ -127,6 +125,7 @@ window.scenario_gen = (opt = {})->
     # более правильный вариант по количеству блоков, но для демки пока пофиг
     # if it's time to generate block - generate block
     if block_in_round_idx >= block_count_per_round
+      round_delimiter_ts_list.push ts
       block_in_round_idx = 0
       curr_round_pow_tx_list = [] # а эти в пролёте и TODO их надо исключить из round_grouped_pow_list
       # ###################################################################################################
