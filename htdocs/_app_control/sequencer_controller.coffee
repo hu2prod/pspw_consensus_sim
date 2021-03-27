@@ -202,6 +202,7 @@ class @Sequencer_controller
           continue if event.type != "block"
           
           y = base_y
+          
           block_drop_ts = null
           # немного калично, но всё же
           for future_event_idx in [event_idx+1 ... node.event_list.length] by 1
@@ -245,7 +246,7 @@ class @Sequencer_controller
             ctx.beginPath()
             x_a = x
             y_a = y
-            x_b = x+node_icon2_size_x
+            x_b = x+node_icon2_size_y # да , _y мы хотим чтобы это был крестик, а не размазня (независимо от zoom)
             y_b = y+node_icon2_size_y
             
             ctx.moveTo x_a, y_a
