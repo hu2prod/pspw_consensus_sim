@@ -3,8 +3,26 @@ module.exports =
     scenario_selected_idx : 0
   
   mount : ()->
+    boring_scenario = scenario_gen {
+      blockchain :
+        round_duration : 10*1000
+    }
+    less_boring_scenario = scenario_gen {
+      blockchain :
+        round_duration : 60*1000
+    }
     scenario = scenario_gen()
     @scenario_list = [
+      {
+        title : "Обычный блокчейн"
+        value : boring_scenario
+        pref_set : {}
+      }
+      {
+        title : "Тоже ок"
+        value : less_boring_scenario
+        pref_set : {}
+      }
       {
         title : "Сороконожка"
         value : scenario
