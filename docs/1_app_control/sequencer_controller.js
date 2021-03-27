@@ -24,7 +24,7 @@
 
     Sequencer_controller.prototype.display_tx_pow_src_lines = true;
 
-    Sequencer_controller.prototype.speed_scale = 1;
+    Sequencer_controller.prototype.speed_scale = 100;
 
     Sequencer_controller.prototype.show_help = false;
 
@@ -98,38 +98,37 @@
       });
       rel_ts = (function(_this) {
         return function(diff) {
-          debugger;
           _this.ts_set(_this.model.ts + diff);
           return _this.refresh();
         };
       })(this);
       this.scheme.active_scheme.register("left", ((function(_this) {
         return function() {
+          return rel_ts(-60000);
+        };
+      })(this)), {
+        description: "-1 min"
+      });
+      this.scheme.active_scheme.register("right", ((function(_this) {
+        return function() {
+          return rel_ts(+60000);
+        };
+      })(this)), {
+        description: "+1 min"
+      });
+      this.scheme.active_scheme.register("comma", ((function(_this) {
+        return function() {
           return rel_ts(-1000);
         };
       })(this)), {
         description: "-1 sec"
       });
-      this.scheme.active_scheme.register("right", ((function(_this) {
+      return this.scheme.active_scheme.register("dot", ((function(_this) {
         return function() {
           return rel_ts(+1000);
         };
       })(this)), {
         description: "+1 sec"
-      });
-      this.scheme.active_scheme.register("comma", ((function(_this) {
-        return function() {
-          return rel_ts(-100);
-        };
-      })(this)), {
-        description: "-0.1 sec"
-      });
-      return this.scheme.active_scheme.register("dot", ((function(_this) {
-        return function() {
-          return rel_ts(+100);
-        };
-      })(this)), {
-        description: "+0.1 sec"
       });
     };
 
@@ -145,7 +144,7 @@
     Sequencer_controller.prototype.size_x = 1;
 
     Sequencer_controller.prototype.redraw_panel_fg = function() {
-      var bar_pad, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size, node_icon2_size_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_idx, node_state, node_state_list, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
+      var bar_pad, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size, node_icon2_size_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_icon_size_timeline, node_idx, node_state, node_state_list, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, time_str, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
       if (!this.has_redraw_changes_panel_fg) {
         return;
       }
@@ -171,6 +170,7 @@
       pad = 4;
       node_icon_count = pow_type_color.length;
       node_icon_size = 16;
+      node_icon_size_timeline = 4;
       node_icon_pad = 2;
       node_icon_pad_left = 4;
       node_icon_offset_top = 3;
@@ -190,8 +190,8 @@
       display_size_x = size_x - left_panel_size_x;
       pow_type_color_disabled = "#AAAAAA";
       node_state_list = [];
-      pow_blink_duration = 1000;
-      filter_a_ts = ts - 1000;
+      pow_blink_duration = 1000 * this.speed_scale;
+      filter_a_ts = ts - 1000 * this.speed_scale;
       filter_b_ts = ts;
       _ref1 = this.model.node_list;
       for (idx = _i = 0, _len = _ref1.length; _i < _len; idx = ++_i) {
@@ -221,10 +221,10 @@
       ctx.fillRect(0.5 + 1, 0.5 + 1, left_panel_size_x - 1, size_y - 2);
       ctx.strokeRect(0.5 + 0, 0.5 + 0, left_panel_size_x - 2, size_y - 1);
       _ref3 = this.model.node_list;
-      for (idx = _k = 0, _len2 = _ref3.length; _k < _len2; idx = ++_k) {
-        node = _ref3[idx];
-        node_state = node_state_list[idx];
-        y = 0.5 + idx * node_bar_size_y + node_icon_offset_top;
+      for (node_idx = _k = 0, _len2 = _ref3.length; _k < _len2; node_idx = ++_k) {
+        node = _ref3[node_idx];
+        node_state = node_state_list[node_idx];
+        y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
         ctx.globalAlpha = 1;
         for (type_idx = _l = 0, _ref4 = pow_type_color.length; 0 <= _ref4 ? _l < _ref4 : _l > _ref4; type_idx = 0 <= _ref4 ? ++_l : --_l) {
           ctx.fillStyle = pow_type_color_disabled;
@@ -238,7 +238,7 @@
           ctx.fillRect(x, y, node_icon_size, node_icon_size);
         }
         ctx.globalAlpha = 1;
-        ctx.fillStyle = distinct_color_list[idx];
+        ctx.fillStyle = distinct_color_list[node_idx];
         x = pow_type_color.length * (node_icon_size + node_icon_pad) + node_icon_pad_left;
         ctx.fillRect(x, y, node_icon_size, node_icon_size);
       }
@@ -247,9 +247,9 @@
       ctx.font = "" + font_size_y + "px monospace";
       ctx.globalAlpha = 1;
       _ref6 = this.model.node_list;
-      for (idx = _n = 0, _len3 = _ref6.length; _n < _len3; idx = ++_n) {
-        node = _ref6[idx];
-        y = 0.5 + -1 + (idx + 1) * node_bar_size_y + text_offset_top;
+      for (node_idx = _n = 0, _len3 = _ref6.length; _n < _len3; node_idx = ++_n) {
+        node = _ref6[node_idx];
+        y = 0.5 + -1 + (node_idx + 2) * node_bar_size_y + text_offset_top;
         ctx.fillText(node.title, left_panel_text_x, y);
         delimiter_y = 4 + 0.5 + Math.round(y);
         ctx.beginPath();
@@ -258,11 +258,18 @@
         ctx.stroke();
         ctx.closePath();
       }
+      y = 0.5 + -1 + 1 * node_bar_size_y + text_offset_top;
+      delimiter_y = 4 + 0.5 + Math.round(y);
+      ctx.beginPath();
+      ctx.moveTo(0, delimiter_y);
+      ctx.lineTo(size_x, delimiter_y);
+      ctx.stroke();
+      ctx.closePath();
       if (this.display_tx_pow) {
         _ref7 = this.model.node_list;
-        for (idx = _o = 0, _len4 = _ref7.length; _o < _len4; idx = ++_o) {
-          node = _ref7[idx];
-          y = 0.5 + idx * node_bar_size_y + node_icon_offset_top;
+        for (node_idx = _o = 0, _len4 = _ref7.length; _o < _len4; node_idx = ++_o) {
+          node = _ref7[node_idx];
+          y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
           _ref8 = node.event_list;
           for (_p = 0, _len5 = _ref8.length; _p < _len5; _p++) {
             event = _ref8[_p];
@@ -277,7 +284,7 @@
             t = event.ts / ts_max;
             x = left_panel_size_x + display_size_x * t;
             ctx.fillStyle = pow_type_color[event.tx_pow_type];
-            ctx.fillRect(x, y, node_icon_size, node_icon_size);
+            ctx.fillRect(x, y, node_icon_size_timeline, node_icon_size);
           }
         }
       }
@@ -285,7 +292,7 @@
         _ref9 = this.model.node_list;
         for (node_idx = _q = 0, _len6 = _ref9.length; _q < _len6; node_idx = ++_q) {
           node = _ref9[node_idx];
-          y = 0.5 + node_idx * node_bar_size_y + node_icon_offset_top;
+          y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
           _ref10 = node.event_list;
           for (event_idx = _r = 0, _len7 = _ref10.length; _r < _len7; event_idx = ++_r) {
             event = _ref10[event_idx];
@@ -350,10 +357,11 @@
           }
         }
       }
+      ctx.textAlign = "right";
       round_id = 0;
       _ref14 = this.model.round_delimiter_ts_list;
-      for (_u = 0, _len9 = _ref14.length; _u < _len9; _u++) {
-        delimiter_ts = _ref14[_u];
+      for (idx = _u = 0, _len9 = _ref14.length; _u < _len9; idx = ++_u) {
+        delimiter_ts = _ref14[idx];
         if (delimiter_ts < ts) {
           round_id++;
         }
@@ -363,6 +371,9 @@
         ctx.moveTo(x, 0.5 + 0);
         ctx.lineTo(x, 0.5 - 1 + size_y);
         ctx.stroke();
+        y = 0.5 + font_size_y;
+        ctx.fillStyle = "#F00";
+        ctx.fillText("round \#" + (idx + 1) + " ", x, y);
       }
       x = left_panel_size_x + (ts / ts_max) * display_size_x;
       x = 0.5 + Math.round(x);
@@ -374,8 +385,9 @@
       ctx.stroke();
       x = 0.5 + size_x - pad;
       y = 0.5 + font_size_y;
-      ctx.textAlign = "right";
-      ctx.fillText("round \#" + (round_id + 1) + " " + ((ts / 1000).toFixed(2).rjust(6)), x, y);
+      ts = Math.round(ts);
+      time_str = tsd_fmt(ts, "hh:MM:SS.ms");
+      ctx.fillText("round \#" + (round_id + 1) + " " + time_str, x, y);
       ctx.textAlign = "left";
     };
 
@@ -426,6 +438,7 @@
     Sequencer_controller.prototype.start_ts = 0;
 
     Sequencer_controller.prototype.ts_set = function(ts) {
+      ts = Math.round(ts);
       ts = Math.max(0, ts);
       ts = Math.min(this.model.ts_max, ts);
       this.model.ts = ts;
