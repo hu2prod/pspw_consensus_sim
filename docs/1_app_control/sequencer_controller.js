@@ -1,4 +1,8 @@
 (function() {
+  var __iced_k, __iced_k_noop;
+
+  __iced_k = __iced_k_noop = function() {};
+
   this.Sequencer_controller = (function() {
     function Sequencer_controller() {}
 
@@ -47,6 +51,8 @@
         this.redraw_panel_fg();
       }
     };
+
+    Sequencer_controller.prototype.animation_loop = true;
 
     Sequencer_controller.prototype.init = function() {
       var fn, rel_speed, rel_ts;
@@ -131,16 +137,59 @@
       })(this)), {
         description: "-1 sec"
       });
-      return this.scheme.active_scheme.register("dot", ((function(_this) {
+      this.scheme.active_scheme.register("dot", ((function(_this) {
         return function() {
           return rel_ts(+1000);
         };
       })(this)), {
         description: "+1 sec"
       });
+      return (function(_this) {
+        return function() {
+          var err, ___iced_passed_deferral, __iced_deferrals, __iced_k;
+          __iced_k = __iced_k_noop;
+          ___iced_passed_deferral = iced.findDeferral(arguments);
+          (function(__iced_k) {
+            var _while;
+            _while = function(__iced_k) {
+              var _break, _continue, _next;
+              _break = __iced_k;
+              _continue = function() {
+                return iced.trampoline(function() {
+                  return _while(__iced_k);
+                });
+              };
+              _next = _continue;
+              if (!_this.animation_loop) {
+                return _break();
+              } else {
+                (function(__iced_k) {
+                  __iced_deferrals = new iced.Deferrals(__iced_k, {
+                    parent: ___iced_passed_deferral
+                  });
+                  requestAnimationFrame(__iced_deferrals.defer({
+                    lineno: 71
+                  }));
+                  __iced_deferrals._fulfill();
+                })(function() {
+                  try {
+                    _this.redraw_panel_fg();
+                  } catch (_error) {
+                    err = _error;
+                    perr(err);
+                  }
+                  return _next();
+                });
+              }
+            };
+            _while(__iced_k);
+          })(function() {});
+        };
+      })(this)();
     };
 
     Sequencer_controller.prototype["delete"] = function() {
+      this.animation_loop = false;
       global_mouse_up.off("mouse_up", this.global_mouse_up_handler);
       return clearInterval(this._animation_interval);
     };
@@ -152,7 +201,7 @@
     Sequencer_controller.prototype.size_x = 1;
 
     Sequencer_controller.prototype.redraw_panel_fg = function() {
-      var bar_pad, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size, node_icon2_size_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_icon_size_timeline, node_idx, node_state, node_state_list, offset_x, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, time_str, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, zoom, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
+      var bar_pad, base_y, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size_x, node_icon2_size_x_2, node_icon2_size_y, node_icon2_size_y_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_icon_size_timeline, node_idx, node_state, node_state_list, offset_x, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, this_node_icon_count, time_str, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, zoom, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
       if (!this.has_redraw_changes_panel_fg) {
         return;
       }
@@ -179,11 +228,12 @@
       pad = 4;
       node_icon_count = pow_type_color.length;
       node_icon_size = 16;
-      node_icon_size_timeline = 4;
+      node_icon_size_timeline = Math.max(1, 0.01 * zoom);
       node_icon_pad = 2;
       node_icon_pad_left = 3;
       node_icon_offset_top = 3;
-      node_icon2_size = 10;
+      node_icon2_size_x = 10;
+      node_icon2_size_y = 10;
       node_icon2_pad = 4;
       node_icon2_offset_left = 3;
       node_icon2_offset_top = 3;
@@ -191,8 +241,8 @@
       bar_pad = 8;
       ruler_pad = 20;
       this.left_panel_size_x = left_panel_size_x = 300;
-      node_icon2_size_2 = node_icon2_size / 2;
-      block_size_x = node_icon_count * (node_icon2_size + node_icon2_pad) + 3;
+      node_icon2_size_x_2 = node_icon2_size_x / 2;
+      node_icon2_size_y_2 = node_icon2_size_y / 2;
       font_size_y = node_bar_size_y - pad;
       font_size_x = font_size_y / 1.8;
       left_panel_text_x = (node_icon_count + 1) * (node_icon_size + node_icon_pad) + node_icon_pad_left;
@@ -253,7 +303,7 @@
         _ref5 = this.model.node_list;
         for (node_idx = _m = 0, _len4 = _ref5.length; _m < _len4; node_idx = ++_m) {
           node = _ref5[node_idx];
-          y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
+          base_y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
           _ref6 = node.event_list;
           for (event_idx = _n = 0, _len5 = _ref6.length; _n < _len5; event_idx = ++_n) {
             event = _ref6[event_idx];
@@ -265,6 +315,7 @@
             if (event.type !== "block") {
               continue;
             }
+            y = base_y;
             block_drop_ts = null;
             for (future_event_idx = _o = _ref7 = event_idx + 1, _ref8 = node.event_list.length; _o < _ref8; future_event_idx = _o += 1) {
               future_event = node.event_list[future_event_idx];
@@ -281,6 +332,8 @@
             x = display_size_x * t;
             x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
             ctx.fillStyle = block_drop_ts != null ? block_drop_color : block_color;
+            this_node_icon_count = Math.max(1, event.tx_pow_list.length);
+            block_size_x = this_node_icon_count * (node_icon2_size_x + node_icon2_pad) + 3;
             ctx.strokeStyle = "#000";
             ctx.fillRect(x, y, block_size_x, node_icon_size);
             ctx.strokeRect(x, y, block_size_x, node_icon_size);
@@ -291,15 +344,15 @@
               tx_pow = _ref9[_p];
               if (this.display_tx_pow_src_lines && tx_pow.source_idx !== node_idx) {
                 ctx.beginPath();
-                ctx.moveTo(x + node_icon2_size_2, y + node_icon2_size_2);
-                ctx.lineTo(x + node_icon2_size_2, y + (node_bar_size_y * (tx_pow.source_idx - node_idx)));
+                ctx.moveTo(x + node_icon2_size_x_2, y + node_icon2_size_y_2);
+                ctx.lineTo(x + node_icon2_size_x_2, y + (node_bar_size_y * (tx_pow.source_idx - node_idx)));
                 ctx.stroke();
                 ctx.closePath();
               }
               ctx.fillStyle = pow_type_color[tx_pow.tx_pow_type];
-              ctx.fillRect(x, y, node_icon2_size, node_icon2_size);
-              ctx.strokeRect(x, y, node_icon2_size, node_icon2_size);
-              x += node_icon2_size + node_icon2_pad;
+              ctx.fillRect(x, y, node_icon2_size_x, node_icon2_size_y);
+              ctx.strokeRect(x, y, node_icon2_size_x, node_icon2_size_y);
+              x += node_icon2_size_x + node_icon2_pad;
             }
             if (block_drop_ts) {
               t = block_drop_ts / ts_max;
@@ -308,8 +361,8 @@
               ctx.beginPath();
               x_a = x;
               y_a = y;
-              x_b = x + node_icon2_size;
-              y_b = y + node_icon2_size;
+              x_b = x + node_icon2_size_y;
+              y_b = y + node_icon2_size_y;
               ctx.moveTo(x_a, y_a);
               ctx.lineTo(x_b, y_b);
               ctx.moveTo(x_a, y_b);
@@ -416,7 +469,6 @@
         case "all":
           this.has_redraw_changes_panel_fg = true;
       }
-      this.redraw_panel_fg();
     };
 
     Sequencer_controller.prototype._mouse_mode = "none";

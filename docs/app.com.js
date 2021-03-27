@@ -73,7 +73,8 @@
                 }
               }, function() {
                 return Sequencer_panel({
-                  value: _this.scenario_list[_this.state.scenario_selected_idx].value
+                  value: _this.scenario_list[_this.state.scenario_selected_idx].value,
+                  height: 500
                 });
               });
             });
