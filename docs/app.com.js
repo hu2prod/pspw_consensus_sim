@@ -8,10 +8,28 @@
       scenario_selected_idx: 0
     },
     mount: function() {
-      var scenario;
+      var boring_scenario, less_boring_scenario, scenario;
+      boring_scenario = scenario_gen({
+        blockchain: {
+          round_duration: 10 * 1000
+        }
+      });
+      less_boring_scenario = scenario_gen({
+        blockchain: {
+          round_duration: 60 * 1000
+        }
+      });
       scenario = scenario_gen();
       return this.scenario_list = [
         {
+          title: "Обычный блокчейн",
+          value: boring_scenario,
+          pref_set: {}
+        }, {
+          title: "Тоже ок",
+          value: less_boring_scenario,
+          pref_set: {}
+        }, {
           title: "Сороконожка",
           value: scenario,
           pref_set: {}
