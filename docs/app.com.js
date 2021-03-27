@@ -8,13 +8,39 @@
       scenario_selected_idx: 0
     },
     mount: function() {
+      var scenario;
+      scenario = scenario_gen();
       return this.scenario_list = [
         {
-          title: "Scenario mining 4 rounds",
-          value: scenario_gen()
+          title: "Сороконожка",
+          value: scenario,
+          pref_set: {}
         }, {
-          title: "Scenario sample",
-          value: scenario_sample
+          title: "Ужас летящий на крыльях ночи",
+          value: scenario,
+          pref_set: {
+            autotrack: true,
+            mode_hide_future: true,
+            zoom: 40,
+            autoplay: true
+          }
+        }, {
+          title: "Ну можно же нормальную валидацию",
+          value: scenario,
+          pref_set: {
+            speed_scale: 20,
+            ts: 2.05 * 60 * 60 * 1000,
+            autotrack: true,
+            mode_hide_future: true,
+            zoom: 40,
+            autoplay: true
+          }
+        }, {
+          title: "3 блока не считая собаки",
+          value: scenario_sample,
+          pref_set: {
+            speed_scale: 1
+          }
         }
       ];
     },
@@ -72,8 +98,11 @@
                   verticalAlign: "top"
                 }
               }, function() {
+                var scenario_set;
+                scenario_set = _this.scenario_list[_this.state.scenario_selected_idx];
                 return Sequencer_panel({
-                  value: _this.scenario_list[_this.state.scenario_selected_idx].value,
+                  value: scenario_set.value,
+                  pref_set: scenario_set.pref_set,
                   height: 500
                 });
               });

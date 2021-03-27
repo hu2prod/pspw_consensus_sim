@@ -7,13 +7,37 @@
     mount: function() {
       this.controller = new Sequencer_controller;
       this.controller.com = this;
-      return this.controller.model = this.props.value;
+      this.controller.model = this.props.value;
+      return obj_set(this.controller, this.props.pref_set);
     },
     props_change: function(new_props) {
+      var _base, _base1, _base2, _base3, _ref;
       if (new_props.value !== this.props.value) {
         this.controller.model = new_props.value;
-        return this.controller.refresh();
       }
+      if (new_props.pref_set !== this.props.pref_set) {
+        this.controller.offset_x = 0;
+        if ((_base = new_props.pref_set).mode_hide_future == null) {
+          _base.mode_hide_future = false;
+        }
+        if ((_base1 = new_props.pref_set).autotrack == null) {
+          _base1.autotrack = false;
+        }
+        if ((_base2 = new_props.pref_set).speed_scale == null) {
+          _base2.speed_scale = 100;
+        }
+        if ((_base3 = new_props.pref_set).zoom == null) {
+          _base3.zoom = 1;
+        }
+        obj_set(this.controller, new_props.pref_set);
+        this.controller.ts_set((_ref = new_props.pref_set.ts) != null ? _ref : 0);
+        if (new_props.pref_set.autoplay) {
+          this.controller.play();
+        } else {
+          this.controller.stop();
+        }
+      }
+      return this.controller.refresh();
     },
     render: function() {
       var size_x, size_y;
