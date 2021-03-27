@@ -7,6 +7,7 @@ class @Sequencer_controller
   node_color_list       : []
   
   play_state            : false
+  mode_hide_future      : true
   
   canvas_controller: (canvas_hash)->
     if canvas_hash.panel_fg
@@ -172,7 +173,8 @@ class @Sequencer_controller
     # ###################################################################################################
     for node, idx in @model.node_list
       for event in node.event_list
-        break    if event.ts > filter_b_ts
+        if @mode_hide_future
+          break    if event.ts > filter_b_ts
         continue if event.type != "tx_pow_mine"
         
     
@@ -244,6 +246,7 @@ class @Sequencer_controller
   _animation_interval : null
   start_ts : 0
   play : ()->
+    clearInterval @_animation_interval if @_animation_interval
     @play_state = true
     @com.force_update()
     # TODO requestAnimationFrame
@@ -267,6 +270,7 @@ class @Sequencer_controller
     @play_state = false
     @com.force_update()
     clearInterval @_animation_interval
+    @_animation_interval = null
   
   toggle_play : ()->
     if @play_state
@@ -282,6 +286,5 @@ class @Sequencer_controller
     t = Math.min 1, t
     ts = t * @model.ts_max
     @model.ts = ts
-    
-    @refresh()
+    @play()
   

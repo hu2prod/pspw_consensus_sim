@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "front_dev": "./loop.sh ./src/front_server.coffee --watch",
-    "front_prod": "./loop.sh ./src/front_server.coffee"
+    "front_prod": "./loop.sh ./src/front_server.coffee",
+    "build_web": "./src/prod_build.coffee"
   },
   "repository": {
     "type": "git",

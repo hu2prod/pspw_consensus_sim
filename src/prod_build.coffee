@@ -10,17 +10,13 @@ process.argv = [
 ]
 
 server = require "./front_server"
-build_folder = "../web"
+build_folder = "./docs"
 # .git will be ignored
 execSync "rm -rf #{build_folder}/*"
 # ###################################################################################################
 #    static folders
 # ###################################################################################################
-static_folder_list = [
-  "cels"
-  "font"
-  "img"
-]
+static_folder_list = []
 
 for folder in static_folder_list
   execSync "cp -r htdocs/#{folder} #{build_folder}/"

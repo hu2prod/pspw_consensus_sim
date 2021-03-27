@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>hello world webcom</title>
+    <style>.smt-spinner-circle {
+  display: inline-block;
+  position: relative;
+  margin: 3px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+.smt-spinner {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  border-right: 2px solid rgba(255,255,255,0.6);
+  border-top: 2px solid blue;
+  border-left: 2px solid blue;
+  border-bottom: 2px solid blue;
+  animation: rotate--spinner 0.8s infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes rotate--spinner {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+.tab button {
+  background-color: inherit;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px 16px;
+  transition: 0.3s;
+}
+
+.tab button:hover {
+  background-color: #ddd;
+}
+
+.tab button.active {
+  background-color: #ccc;
+}
+
+.table {
+  border-collapse:collapse; /* TODO move */
+}
+
+.table>tbody>tr {
+  border: 1px solid #a2a9b1;
+  padding: 0.2em 0.4em;
+}
+
+.table>tbody>tr>th {
+  border: 1px solid #a2a9b1;
+  padding: 0.2em 0.4em;
+  background-color: #eaecf0;
+}
+
+.table>tbody>tr>td {
+  border: 1px solid #a2a9b1;
+  padding: 0.2em 0.4em;
+  background-color: #f8f9fa;
+}
+
+.table>tbody>tr.selected>td {
+  background-color: #ffc;
+}
+
+.table>tbody>tr>td.selected {
+  background-color: #ffc;
+}
+
+.table>tbody>tr.selected>th {
+  background-color: #ffc;
+}
+
+.table>tbody>tr>th.selected {
+  background-color: #ffc;
+}
+
+.table>tbody>tr>th.sort {
+  background-image: url(/_layout/table/sort_both.png);
+  background-image: linear-gradient(transparent,transparent),url(data:image/svg+xml,<%3Fxml%20version%3D"1.0"%20encoding%3D"UTF-8"%3F>%0A<svg%20xmlns%3D"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg"%20viewBox%3D"0%200%2021%209"%20height%3D"9"%20width%3D"21">%0A%20%20%20%20<path%20d%3D"M14.5%205l-4%204-4-4zM14.5%204l-4-4-4%204z"%2F>%0A<%2Fsvg>%0A);
+  background-image: -o-linear-gradient(transparent,transparent),url(/_layout/table/sort_both.png);
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center right;
+  padding-right: 21px;
+  user-select : none;
+}
+
+.table>tbody>tr>th.asc {
+  background-image: url(/_layout/table/sort_up.png);
+  background-image: linear-gradient(transparent,transparent),url(data:image/svg+xml,<%3Fxml%20version%3D"1.0"%20encoding%3D"UTF-8"%3F>%0A<svg%20xmlns%3D"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg"%20viewBox%3D"0%200%2021%204"%20height%3D"4"%20width%3D"21">%0A%20%20%20%20<path%20d%3D"M6.5%204l4-4%204%204z"%2F>%0A<%2Fsvg>%0A);
+  background-image: -o-linear-gradient(transparent,transparent),url(/_layout/table/sort_up.png);
+}
+
+.table>tbody>tr>th.desc {
+  background-image: url(/_layout/table/sort_down.png);
+  background-image: linear-gradient(transparent,transparent),url(data:image/svg+xml,<%3Fxml%20version%3D"1.0"%20encoding%3D"UTF-8"%3F>%0A<svg%20xmlns%3D"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg"%20viewBox%3D"0%200%2021%204"%20height%3D"4"%20width%3D"21">%0A%20%20%20%20<path%20d%3D"M14.5%200l-4%204-4-4z"%2F>%0A<%2Fsvg>%0A);
+  background-image: -o-linear-gradient(transparent,transparent),url(/_layout/table/sort_down.png);
+}
+</style>
+  </head>
+  <body>
+    <div id="mount_point"></div>
+    <script src="./vendor/react_min/1react.js"></script>
+    <script src="./vendor/react_min/2react-dom.js"></script>
+    <script src="./bundle.js"></script>
+    <script src="./1_app_control/sequencer_panel.com.js"></script>
+    <script src="./1_basic_control/button/button.com.js"></script>
+    <script src="./1_basic_control/checkbox/checkbox.com.js"></script>
+    <script src="./1_basic_control/number_input/number_input.com.js"></script>
+    <script src="./1_basic_control/select/select.com.js"></script>
+    <script src="./1_basic_control/spinner/spinner.com.js"></script>
+    <script src="./1_basic_control/text_input/text_input.com.js"></script>
+    <script src="./1_basic_control/textarea/textarea.com.js"></script>
+    <script src="./1_control/canvas/canvas.com.js"></script>
+    <script src="./1_control/canvas/canvas_multi.com.js"></script>
+    <script src="./1_control/tab_bar/tab_bar.com.js"></script>
+    <script src="./1_layout/table/table.com.js"></script>
+    <script src="./1_layout/tooltip/tooltip.com.js"></script>
+    <script src="./app.com.js"></script>
+    <script src="./1_init_and_modules/1_global_mouse_up.js"></script>
+    <script src="./1_init_and_modules/1_iced_runtime.js"></script>
+    <script src="./1_init_and_modules/1_rel_mouse_coords.js"></script>
+    <script src="./1_init_and_modules/bind2.js"></script>
+    <script src="./1_app_control/sequencer_controller.js"></script>
+    <script src="./util/distinct_color_list.js"></script>
+    <script src="./z_bootstrap.js"></script>
+  </body>
+</html>

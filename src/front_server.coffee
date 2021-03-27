@@ -27,7 +27,7 @@ bundle.plugin_add "keymap"
 bundle.plugin_add "keyboard scheme"
 bundle.feature_hash.hotreload = true
 
-delivery.start {
+@content_htdocs_server = delivery.start @content_htdocs_server_opt = {
   htdocs : "htdocs"
   hotreload  : !!argv.watch
   title : "hello world webcom"
