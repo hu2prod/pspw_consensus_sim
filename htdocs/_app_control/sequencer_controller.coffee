@@ -97,6 +97,7 @@ class @Sequencer_controller
     ctx.strokeStyle = "#000"
     ctx.strokeRect 0.5, 0.5, 0.5-1+size_x, 0.5-1+size_y
     return if !@model
+    
     # ###################################################################################################
     #    const
     # ###################################################################################################
@@ -122,13 +123,14 @@ class @Sequencer_controller
     # Прим я скорее потом эти иконки уберу, но пока пусть будут
     node_icon_count = pow_type_color.length
     node_icon_size  = 16
-    node_icon_size_timeline = 4
+    node_icon_size_timeline = 4*zoom
     node_icon_pad   = 2
     node_icon_pad_left = 3
     node_icon_offset_top = 3
     
     # внутри блока
-    node_icon2_size  = 10
+    node_icon2_size_x  = 10*@zoom
+    node_icon2_size_y  = 10
     node_icon2_pad   = 4
     node_icon2_offset_left = 3
     node_icon2_offset_top = 3
@@ -139,8 +141,9 @@ class @Sequencer_controller
     @left_panel_size_x = left_panel_size_x = 300
     
     # L2
-    node_icon2_size_2 = node_icon2_size/2
-    block_size_x= node_icon_count*(node_icon2_size + node_icon2_pad) + 3
+    node_icon2_size_x_2 = node_icon2_size_x/2
+    node_icon2_size_y_2 = node_icon2_size_y/2
+    block_size_x= node_icon_count*(node_icon2_size_x + node_icon2_pad) + 3
     font_size_y = node_bar_size_y-pad
     font_size_x = font_size_y/1.8 # MAGIC number
     # +1 т.к. еще иконка цвета ноды
@@ -192,12 +195,13 @@ class @Sequencer_controller
     # ###################################################################################################
     if @display_block
       for node, node_idx in @model.node_list
-        y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
+        base_y = 0.5 + (node_idx+1) * node_bar_size_y + node_icon_offset_top
         for event, event_idx in node.event_list
           if @mode_hide_future
             break    if event.ts > filter_b_ts
           continue if event.type != "block"
           
+          y = base_y
           block_drop_ts = null
           # немного калично, но всё же
           for future_event_idx in [event_idx+1 ... node.event_list.length] by 1
@@ -223,16 +227,16 @@ class @Sequencer_controller
             
             if @display_tx_pow_src_lines and tx_pow.source_idx != node_idx
               ctx.beginPath()
-              ctx.moveTo x+node_icon2_size_2, y+node_icon2_size_2
-              ctx.lineTo x+node_icon2_size_2, y+(node_bar_size_y * (tx_pow.source_idx - node_idx))
+              ctx.moveTo x+node_icon2_size_x_2, y+node_icon2_size_y_2
+              ctx.lineTo x+node_icon2_size_x_2, y+(node_bar_size_y * (tx_pow.source_idx - node_idx))
               ctx.stroke()
               ctx.closePath()
             
             ctx.fillStyle = pow_type_color[tx_pow.tx_pow_type]
-            ctx.fillRect    x, y, node_icon2_size, node_icon2_size
-            ctx.strokeRect  x, y, node_icon2_size, node_icon2_size
+            ctx.fillRect    x, y, node_icon2_size_x, node_icon2_size_y
+            ctx.strokeRect  x, y, node_icon2_size_x, node_icon2_size_y
             
-            x += node_icon2_size + node_icon2_pad
+            x += node_icon2_size_x + node_icon2_pad
           
           if block_drop_ts
             t = block_drop_ts / ts_max
@@ -241,8 +245,8 @@ class @Sequencer_controller
             ctx.beginPath()
             x_a = x
             y_a = y
-            x_b = x+node_icon2_size
-            y_b = y+node_icon2_size
+            x_b = x+node_icon2_size_x
+            y_b = y+node_icon2_size_y
             
             ctx.moveTo x_a, y_a
             ctx.lineTo x_b, y_b
@@ -250,7 +254,7 @@ class @Sequencer_controller
             ctx.lineTo x_b, y_a
             ctx.stroke()
             ctx.closePath()
-          
+    
     # ###################################################################################################
     #    round_delimiter_ts_list
     # ###################################################################################################
@@ -269,7 +273,6 @@ class @Sequencer_controller
       y = 0.5+font_size_y
       ctx.fillStyle = "#F00"
       ctx.fillText "round \##{idx+1} ", x, y
-    
     
     # ###################################################################################################
     #    left panel
