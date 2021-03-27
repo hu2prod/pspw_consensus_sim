@@ -21,7 +21,7 @@ window.scenario_gen = (opt = {})->
       pow_type_count
       pow_diff
     } = opt.blockchain
-  node_count ?= 3
+  node_count ?= 20
   block_round_count ?= 4
   node_hashrate ?= 100
   pow_simulation_step ?= 100
@@ -38,8 +38,10 @@ window.scenario_gen = (opt = {})->
   
   pow_type_count ?= 4
   # тут проблема что target_pow_count_per_round это каждой, а мы разбрасываем
-  pow_diff       ?= 100*node_hashrate*node_count
+  # pow_diff       ?= 100*node_hashrate*node_count
+  pow_diff       ?= 10*node_hashrate*node_count
   
+  block_count_per_round = round_duration // block_interval
   # ###################################################################################################
   #    logical
   # ###################################################################################################
@@ -66,13 +68,28 @@ window.scenario_gen = (opt = {})->
   #    simulate pow
   # ###################################################################################################
   
-  # расписание поездов по умолчанию
-  block_schedule_list = []
+  block_schedule_list_per_round_list = []
   
-  prev_round_idx = 0
+  # расписание поездов по умолчанию
+  # только node 1 генерирует
+  block_schedule_list = []
+  for i in [0 ... block_count_per_round]
+    block_schedule_list.push [0]
+  
+  block_schedule_list_per_round_list.push block_schedule_list
+  
+  for node, idx in node_list
+    node.curr_round_vote_power = 0
+    node.id = idx
+  node_list[0].curr_round_vote_power = 1
+  
+  round_idx = 0
+  block_in_round_idx = 0
+  last_block_ts = -Infinity
+  curr_round_pow_tx_list = []
+  
   for ts in [0 ... ts_max] by pow_simulation_step
-    round_idx = ts//round_duration
-    for node in node_list
+    for node, node_idx in node_list
       curr_node_hashrate = node_hashrate
       
       hash_count = pow_simulation_step*curr_node_hashrate / 1000
@@ -82,18 +99,89 @@ window.scenario_gen = (opt = {})->
             type : "tx_pow_mine"
             ts
             tx_pow_type : rand_range(0, 4) # странная логика, но пускай будет так для красоты
+            source_idx  : node_idx
           }
           node.round_grouped_pow_list[round_idx] ?= []
           node.round_grouped_pow_list[round_idx].push curr_pow
+          curr_round_pow_tx_list.push curr_pow
     
-    # if it's time to generate block - generate block
-    
-    if prev_round_idx != round_idx
-      prev_round_idx = round_idx
+    # it's time for block?
+    # if ts - last_block_ts > block_interval + block_start_offset
+    if ts - last_block_ts > block_interval
+      last_block_ts = ts
+      # TODO тут сложнее, тут надо чтобы все начинали делать выпуск
+      # каждая следующая в очереди через 100 ms после предыдущей
+      node_idx = block_schedule_list[block_in_round_idx++][0] # главная нода
+      node = node_list[node_idx]
+      tx_pow_list = []
       
+      tx_pow_list.append curr_round_pow_tx_list
+      curr_round_pow_tx_list.clear()
+      
+      node.event_list.push {
+        type : "block"
+        ts
+        tx_pow_list
+      }
+    
+    # более правильный вариант по количеству блоков, но для демки пока пофиг
+    # if it's time to generate block - generate block
+    if block_in_round_idx >= block_count_per_round
+      block_in_round_idx = 0
+      curr_round_pow_tx_list = [] # а эти в пролёте и TODO их надо исключить из round_grouped_pow_list
       # ###################################################################################################
       #    генерация расписания поездов
       # ###################################################################################################
+      # old_block_schedule_list = block_schedule_list
+      for node in node_list
+        node.prev_round_vote_power = node.curr_round_vote_power
+        node.curr_round_vote_power = (node.round_grouped_pow_list[round_idx] ? []).length
+      
+      total_curr_round_vote_power = 0
+      total_prev_round_vote_power = 0
+      
+      for node in node_list
+        total_curr_round_vote_power += node.curr_round_vote_power
+        total_prev_round_vote_power += node.prev_round_vote_power
+      
+      # защита от застревания блокчейна
+      if total_curr_round_vote_power == 0
+        # taking from prev_round_vote_power
+        for node in node_list
+          node.next_round_vote_power = node.prev_round_vote_power
+        total_round_vote_power = total_prev_round_vote_power
+      else
+        for node in node_list
+          node.next_round_vote_power = node.curr_round_vote_power
+        total_round_vote_power = total_curr_round_vote_power
+      
+      save_seed = window.rand_seed # HACK
+      window.rand_seed = round_idx # может даже так лучше, чем какой-то источник энтропии
+      
+      
+      block_schedule_list = []
+      for block_idx in [0 ... block_count_per_round]
+        node_sort_list = node_list.clone()
+        for node in node_sort_list
+          node.roll = rand_range(0, 1024*1024)*node.next_round_vote_power
+        
+        # id на случай выпадения одинаковых roll'ов (в реальном БЧ берется с адреса валидатора)
+        node_sort_list.sort (a,b)->-(a.roll-b.roll) or (a.id - b.id) # DESC
+        
+        block_schedule_list.push sort_list = []
+        for node in node_sort_list
+          sort_list.push node.id
+        
+      for node in node_list
+        rand_range
+      
+      for node in node_list
+        node.curr_round_vote_power = node.next_round_vote_power
+      
+      window.rand_seed = save_seed # HACK
+      block_schedule_list_per_round_list.push block_schedule_list
+      
+      round_idx++
   
   
   # ###################################################################################################
@@ -109,83 +197,5 @@ window.scenario_gen = (opt = {})->
     ts_max
     round_delimiter_ts_list
     node_list
-    # [
-    #   {
-    #     title : "Node 1"
-    #     event_list : [
-    #       {
-    #         type : "block"
-    #         ts   : 0
-    #         tx_pow_list : []
-    #       }
-    #       {
-    #         type : "tx_pow_mine"
-    #         ts   : 100
-    #         tx_pow_type : 1
-    #       }
-    #       {
-    #         type : "tx_pow_mine"
-    #         ts   : 500
-    #         tx_pow_type : 3
-    #       }
-    #       {
-    #         type : "block"
-    #         ts   : 4000
-    #         tx_pow_list : []
-    #       }
-    #     ]
-    #   }
-    #   {
-    #     title : "Node 2"
-    #     event_list : [
-    #       {
-    #         type : "tx_pow_mine"
-    #         ts   : 200
-    #         tx_pow_type : 2
-    #       }
-    #       {
-    #         type : "tx_pow_mine"
-    #         ts   : 800
-    #         tx_pow_type : 0
-    #       }
-    #       {
-    #         type : "block"
-    #         ts   : 2000
-    #         tx_pow_list : [  # edge case
-    #           {
-    #             tx_pow_type : 0
-    #             source_idx  : 1
-    #           }
-    #           {
-    #             tx_pow_type : 1
-    #             source_idx  : 0
-    #           }
-    #           {
-    #             tx_pow_type : 2
-    #             source_idx  : 1
-    #           }
-    #           {
-    #             tx_pow_type : 3
-    #             source_idx  : 0
-    #           }
-    #         ]
-    #       }
-    #     ]
-    #   }
-    #   {
-    #     title : "Node 3"
-    #     event_list : [
-    #       {
-    #         type : "block"
-    #         ts   : 100
-    #         tx_pow_list : []
-    #       }
-    #       {
-    #         type : "block_drop"
-    #         ts   : 400
-    #         tx_pow_list : []
-    #       }
-    #     ]
-    #   }
-    # ]
+    block_schedule_list_per_round_list
   }

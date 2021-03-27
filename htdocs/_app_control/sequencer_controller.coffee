@@ -28,6 +28,7 @@ class @Sequencer_controller
     
     return
   
+  animation_loop : true
   init: ()->
     # TODO scheme
     global_mouse_up.on "mouse_up", @global_mouse_up_handler = (e)=>
@@ -66,9 +67,17 @@ class @Sequencer_controller
     @scheme.active_scheme.register "dot",   (()=>rel_ts( +1000)),  description: "+1 sec"
     
     # TODO zoom_in, zoom_out
-    
+    do ()=>
+      while @animation_loop
+        await requestAnimationFrame defer()
+        try
+          @redraw_panel_fg()
+        catch err
+          perr err
+      return
   
   delete : ()->
+    @animation_loop = false
     global_mouse_up.off "mouse_up", @global_mouse_up_handler
     clearInterval @_animation_interval
   
@@ -123,13 +132,13 @@ class @Sequencer_controller
     # Прим я скорее потом эти иконки уберу, но пока пусть будут
     node_icon_count = pow_type_color.length
     node_icon_size  = 16
-    node_icon_size_timeline = 4*zoom
+    node_icon_size_timeline = Math.max 1, 0.01*zoom
     node_icon_pad   = 2
     node_icon_pad_left = 3
     node_icon_offset_top = 3
     
     # внутри блока
-    node_icon2_size_x  = 10*@zoom
+    node_icon2_size_x  = 10
     node_icon2_size_y  = 10
     node_icon2_pad   = 4
     node_icon2_offset_left = 3
@@ -143,7 +152,6 @@ class @Sequencer_controller
     # L2
     node_icon2_size_x_2 = node_icon2_size_x/2
     node_icon2_size_y_2 = node_icon2_size_y/2
-    block_size_x= node_icon_count*(node_icon2_size_x + node_icon2_pad) + 3
     font_size_y = node_bar_size_y-pad
     font_size_x = font_size_y/1.8 # MAGIC number
     # +1 т.к. еще иконка цвета ноды
@@ -217,6 +225,9 @@ class @Sequencer_controller
           x = 0.5 + left_panel_size_x + Math.round x*zoom + offset_x
           ctx.fillStyle = if block_drop_ts? then block_drop_color else block_color
           
+          this_node_icon_count = Math.max 1, event.tx_pow_list.length
+          
+          block_size_x= this_node_icon_count*(node_icon2_size_x + node_icon2_pad) + 3
           ctx.strokeStyle = "#000"
           ctx.fillRect    x, y, block_size_x, node_icon_size
           ctx.strokeRect  x, y, block_size_x, node_icon_size
@@ -368,7 +379,6 @@ class @Sequencer_controller
       when "all"
         @has_redraw_changes_panel_fg = true
     
-    @redraw_panel_fg()
     return
   
   # ###################################################################################################

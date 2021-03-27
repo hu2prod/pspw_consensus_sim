@@ -47,4 +47,5 @@ module.exports =
           }
             Sequencer_panel {
               value : @scenario_list[@state.scenario_selected_idx].value
+              height: 500
             }
