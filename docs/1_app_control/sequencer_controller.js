@@ -30,6 +30,14 @@
 
     Sequencer_controller.prototype.speed_step = 0.1;
 
+    Sequencer_controller.prototype.zoom = 1;
+
+    Sequencer_controller.prototype.offset_x = 0;
+
+    Sequencer_controller.prototype.zoom_mult_wheel = 1.2;
+
+    Sequencer_controller.prototype.zoom_mult_keyb = 1.2;
+
     Sequencer_controller.prototype.canvas_controller = function(canvas_hash) {
       var $canvas_panel_fg;
       if (canvas_hash.panel_fg) {
@@ -144,7 +152,7 @@
     Sequencer_controller.prototype.size_x = 1;
 
     Sequencer_controller.prototype.redraw_panel_fg = function() {
-      var bar_pad, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size, node_icon2_size_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_icon_size_timeline, node_idx, node_state, node_state_list, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, time_str, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
+      var bar_pad, block_color, block_drop_color, block_drop_ts, block_size_x, canvas, ctx, delimiter_ts, delimiter_y, display_size_x, ed_ts, event, event_idx, filter_a_ts, filter_b_ts, font_size_x, font_size_y, future_event, future_event_idx, idx, left_panel_size_x, left_panel_text_x, node, node_bar_size_y, node_icon2_offset_left, node_icon2_offset_top, node_icon2_pad, node_icon2_size, node_icon2_size_2, node_icon_count, node_icon_offset_top, node_icon_pad, node_icon_pad_left, node_icon_size, node_icon_size_timeline, node_idx, node_state, node_state_list, offset_x, pad, pow_blink_duration, pow_type_color, pow_type_color_disabled, round_id, ruler_pad, size_x, size_y, t, text_offset_top, time_str, ts, ts_max, tx_pow, type_idx, x, x_a, x_b, y, y_a, y_b, zoom, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _s, _t, _u;
       if (!this.has_redraw_changes_panel_fg) {
         return;
       }
@@ -163,6 +171,7 @@
         return;
       }
       _ref = this.model, ts = _ref.ts, ts_max = _ref.ts_max;
+      offset_x = this.offset_x, zoom = this.zoom;
       block_color = "#AAFFAA";
       block_drop_color = "#AAAAAA";
       pow_type_color = ["#00FFFF", "#0094FF", "#0026FF", "#B200FF"];
@@ -172,7 +181,7 @@
       node_icon_size = 16;
       node_icon_size_timeline = 4;
       node_icon_pad = 2;
-      node_icon_pad_left = 4;
+      node_icon_pad_left = 3;
       node_icon_offset_top = 3;
       node_icon2_size = 10;
       node_icon2_pad = 4;
@@ -216,63 +225,14 @@
         }
         node_state;
       }
-      ctx.fillStyle = "rgba(250,250,255,0.9)";
-      ctx.strokeStyle = "#000";
-      ctx.fillRect(0.5 + 1, 0.5 + 1, left_panel_size_x - 1, size_y - 2);
-      ctx.strokeRect(0.5 + 0, 0.5 + 0, left_panel_size_x - 2, size_y - 1);
-      _ref3 = this.model.node_list;
-      for (node_idx = _k = 0, _len2 = _ref3.length; _k < _len2; node_idx = ++_k) {
-        node = _ref3[node_idx];
-        node_state = node_state_list[node_idx];
-        y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
-        ctx.globalAlpha = 1;
-        for (type_idx = _l = 0, _ref4 = pow_type_color.length; 0 <= _ref4 ? _l < _ref4 : _l > _ref4; type_idx = 0 <= _ref4 ? ++_l : --_l) {
-          ctx.fillStyle = pow_type_color_disabled;
-          x = type_idx * (node_icon_size + node_icon_pad) + node_icon_pad_left;
-          ctx.fillRect(x, y, node_icon_size, node_icon_size);
-        }
-        for (type_idx = _m = 0, _ref5 = pow_type_color.length; 0 <= _ref5 ? _m < _ref5 : _m > _ref5; type_idx = 0 <= _ref5 ? ++_m : --_m) {
-          ctx.globalAlpha = node_state.pow_icon_opacity[type_idx];
-          ctx.fillStyle = pow_type_color[type_idx];
-          x = type_idx * (node_icon_size + node_icon_pad) + node_icon_pad_left;
-          ctx.fillRect(x, y, node_icon_size, node_icon_size);
-        }
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = distinct_color_list[node_idx];
-        x = pow_type_color.length * (node_icon_size + node_icon_pad) + node_icon_pad_left;
-        ctx.fillRect(x, y, node_icon_size, node_icon_size);
-      }
-      ctx.fillStyle = "#000";
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.font = "" + font_size_y + "px monospace";
-      ctx.globalAlpha = 1;
-      _ref6 = this.model.node_list;
-      for (node_idx = _n = 0, _len3 = _ref6.length; _n < _len3; node_idx = ++_n) {
-        node = _ref6[node_idx];
-        y = 0.5 + -1 + (node_idx + 2) * node_bar_size_y + text_offset_top;
-        ctx.fillText(node.title, left_panel_text_x, y);
-        delimiter_y = 4 + 0.5 + Math.round(y);
-        ctx.beginPath();
-        ctx.moveTo(0, delimiter_y);
-        ctx.lineTo(size_x, delimiter_y);
-        ctx.stroke();
-        ctx.closePath();
-      }
-      y = 0.5 + -1 + 1 * node_bar_size_y + text_offset_top;
-      delimiter_y = 4 + 0.5 + Math.round(y);
-      ctx.beginPath();
-      ctx.moveTo(0, delimiter_y);
-      ctx.lineTo(size_x, delimiter_y);
-      ctx.stroke();
-      ctx.closePath();
       if (this.display_tx_pow) {
-        _ref7 = this.model.node_list;
-        for (node_idx = _o = 0, _len4 = _ref7.length; _o < _len4; node_idx = ++_o) {
-          node = _ref7[node_idx];
+        _ref3 = this.model.node_list;
+        for (node_idx = _k = 0, _len2 = _ref3.length; _k < _len2; node_idx = ++_k) {
+          node = _ref3[node_idx];
           y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
-          _ref8 = node.event_list;
-          for (_p = 0, _len5 = _ref8.length; _p < _len5; _p++) {
-            event = _ref8[_p];
+          _ref4 = node.event_list;
+          for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
+            event = _ref4[_l];
             if (this.mode_hide_future) {
               if (event.ts > filter_b_ts) {
                 break;
@@ -282,20 +242,21 @@
               continue;
             }
             t = event.ts / ts_max;
-            x = left_panel_size_x + display_size_x * t;
+            x = display_size_x * t;
+            x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
             ctx.fillStyle = pow_type_color[event.tx_pow_type];
             ctx.fillRect(x, y, node_icon_size_timeline, node_icon_size);
           }
         }
       }
       if (this.display_block) {
-        _ref9 = this.model.node_list;
-        for (node_idx = _q = 0, _len6 = _ref9.length; _q < _len6; node_idx = ++_q) {
-          node = _ref9[node_idx];
+        _ref5 = this.model.node_list;
+        for (node_idx = _m = 0, _len4 = _ref5.length; _m < _len4; node_idx = ++_m) {
+          node = _ref5[node_idx];
           y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
-          _ref10 = node.event_list;
-          for (event_idx = _r = 0, _len7 = _ref10.length; _r < _len7; event_idx = ++_r) {
-            event = _ref10[event_idx];
+          _ref6 = node.event_list;
+          for (event_idx = _n = 0, _len5 = _ref6.length; _n < _len5; event_idx = ++_n) {
+            event = _ref6[event_idx];
             if (this.mode_hide_future) {
               if (event.ts > filter_b_ts) {
                 break;
@@ -305,7 +266,7 @@
               continue;
             }
             block_drop_ts = null;
-            for (future_event_idx = _s = _ref11 = event_idx + 1, _ref12 = node.event_list.length; _s < _ref12; future_event_idx = _s += 1) {
+            for (future_event_idx = _o = _ref7 = event_idx + 1, _ref8 = node.event_list.length; _o < _ref8; future_event_idx = _o += 1) {
               future_event = node.event_list[future_event_idx];
               if (future_event.type === "block") {
                 break;
@@ -317,16 +278,17 @@
               }
             }
             t = event.ts / ts_max;
-            x = 0.5 + left_panel_size_x + display_size_x * t;
+            x = display_size_x * t;
+            x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
             ctx.fillStyle = block_drop_ts != null ? block_drop_color : block_color;
             ctx.strokeStyle = "#000";
             ctx.fillRect(x, y, block_size_x, node_icon_size);
             ctx.strokeRect(x, y, block_size_x, node_icon_size);
             x += node_icon2_offset_left;
             y += node_icon2_offset_top;
-            _ref13 = event.tx_pow_list;
-            for (_t = 0, _len8 = _ref13.length; _t < _len8; _t++) {
-              tx_pow = _ref13[_t];
+            _ref9 = event.tx_pow_list;
+            for (_p = 0, _len6 = _ref9.length; _p < _len6; _p++) {
+              tx_pow = _ref9[_p];
               if (this.display_tx_pow_src_lines && tx_pow.source_idx !== node_idx) {
                 ctx.beginPath();
                 ctx.moveTo(x + node_icon2_size_2, y + node_icon2_size_2);
@@ -341,7 +303,8 @@
             }
             if (block_drop_ts) {
               t = block_drop_ts / ts_max;
-              x = 0.5 + left_panel_size_x + display_size_x * t;
+              x = display_size_x * t;
+              x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
               ctx.beginPath();
               x_a = x;
               y_a = y;
@@ -359,13 +322,14 @@
       }
       ctx.textAlign = "right";
       round_id = 0;
-      _ref14 = this.model.round_delimiter_ts_list;
-      for (idx = _u = 0, _len9 = _ref14.length; _u < _len9; idx = ++_u) {
-        delimiter_ts = _ref14[idx];
+      _ref10 = this.model.round_delimiter_ts_list;
+      for (idx = _q = 0, _len7 = _ref10.length; _q < _len7; idx = ++_q) {
+        delimiter_ts = _ref10[idx];
         if (delimiter_ts < ts) {
           round_id++;
         }
-        x = left_panel_size_x + (delimiter_ts / ts_max) * display_size_x;
+        x = (delimiter_ts / ts_max) * display_size_x;
+        x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
         ctx.strokeStyle = "#F00";
         ctx.beginPath();
         ctx.moveTo(x, 0.5 + 0);
@@ -375,8 +339,58 @@
         ctx.fillStyle = "#F00";
         ctx.fillText("round \#" + (idx + 1) + " ", x, y);
       }
-      x = left_panel_size_x + (ts / ts_max) * display_size_x;
-      x = 0.5 + Math.round(x);
+      ctx.fillStyle = "rgba(250,250,255,0.9)";
+      ctx.strokeStyle = "#000";
+      ctx.fillRect(0.5 + 1, 0.5 + 1, left_panel_size_x - 1, size_y - 2);
+      ctx.strokeRect(0.5 + 0, 0.5 + 0, left_panel_size_x - 2, size_y - 1);
+      ctx.textAlign = "left";
+      _ref11 = this.model.node_list;
+      for (node_idx = _r = 0, _len8 = _ref11.length; _r < _len8; node_idx = ++_r) {
+        node = _ref11[node_idx];
+        node_state = node_state_list[node_idx];
+        y = 0.5 + (node_idx + 1) * node_bar_size_y + node_icon_offset_top;
+        ctx.globalAlpha = 1;
+        for (type_idx = _s = 0, _ref12 = pow_type_color.length; 0 <= _ref12 ? _s < _ref12 : _s > _ref12; type_idx = 0 <= _ref12 ? ++_s : --_s) {
+          ctx.fillStyle = pow_type_color_disabled;
+          x = 0.5 + type_idx * (node_icon_size + node_icon_pad) + node_icon_pad_left;
+          ctx.fillRect(x, y, node_icon_size, node_icon_size);
+        }
+        for (type_idx = _t = 0, _ref13 = pow_type_color.length; 0 <= _ref13 ? _t < _ref13 : _t > _ref13; type_idx = 0 <= _ref13 ? ++_t : --_t) {
+          ctx.globalAlpha = node_state.pow_icon_opacity[type_idx];
+          ctx.fillStyle = pow_type_color[type_idx];
+          x = 0.5 + type_idx * (node_icon_size + node_icon_pad) + node_icon_pad_left;
+          ctx.fillRect(x, y, node_icon_size, node_icon_size);
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = distinct_color_list[node_idx];
+        x = pow_type_color.length * (node_icon_size + node_icon_pad) + node_icon_pad_left;
+        ctx.fillRect(x, y, node_icon_size, node_icon_size);
+      }
+      ctx.fillStyle = "#000";
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.font = "" + font_size_y + "px monospace";
+      ctx.globalAlpha = 1;
+      _ref14 = this.model.node_list;
+      for (node_idx = _u = 0, _len9 = _ref14.length; _u < _len9; node_idx = ++_u) {
+        node = _ref14[node_idx];
+        y = 0.5 + -1 + (node_idx + 2) * node_bar_size_y + text_offset_top;
+        ctx.fillText(node.title, left_panel_text_x, y);
+        delimiter_y = 4 + 0.5 + Math.round(y);
+        ctx.beginPath();
+        ctx.moveTo(0, delimiter_y);
+        ctx.lineTo(size_x, delimiter_y);
+        ctx.stroke();
+        ctx.closePath();
+      }
+      y = 0.5 + -1 + 1 * node_bar_size_y + text_offset_top;
+      delimiter_y = 4 + 0.5 + Math.round(y);
+      ctx.beginPath();
+      ctx.moveTo(0, delimiter_y);
+      ctx.lineTo(size_x, delimiter_y);
+      ctx.stroke();
+      ctx.closePath();
+      x = (ts / ts_max) * display_size_x;
+      x = 0.5 + left_panel_size_x + Math.round(x * zoom + offset_x);
       ctx.strokeStyle = "#000";
       ctx.fillStyle = "#000";
       ctx.beginPath();
@@ -387,8 +401,8 @@
       y = 0.5 + font_size_y;
       ts = Math.round(ts);
       time_str = tsd_fmt(ts, "hh:MM:SS.ms");
+      ctx.textAlign = "right";
       ctx.fillText("round \#" + (round_id + 1) + " " + time_str, x, y);
-      ctx.textAlign = "left";
     };
 
     Sequencer_controller.prototype.refresh = function(layer_name) {
@@ -405,27 +419,60 @@
       this.redraw_panel_fg();
     };
 
-    Sequencer_controller.prototype._is_mouse_down = false;
+    Sequencer_controller.prototype._mouse_mode = "none";
 
     Sequencer_controller.prototype.mouse_down = function(event, layer_name) {
-      var x, y, _ref;
-      _ref = rel_mouse_coords(event), x = _ref.x, y = _ref.y;
+      var gx, gy, mx, my, _ref, _ref1;
+      _ref = rel_mouse_coords(event), mx = _ref.x, my = _ref.x;
+      _ref1 = this.get_grid_coord(mx, my), gx = _ref1.x, gy = _ref1.y;
       switch (layer_name) {
         case "panel_fg":
-          this._is_mouse_down = true;
-          return this.seek(x);
+          switch (event.nativeEvent.which) {
+            case 1:
+              this._mouse_mode = "seek";
+              break;
+            case 2:
+              this._mouse_mode = "drag";
+          }
+          return this.seek(gx);
       }
     };
 
     Sequencer_controller.prototype.mouse_up = function(event, layer_name) {
-      return this._is_mouse_down = false;
+      return this._mouse_mode = "none";
     };
 
+    Sequencer_controller.prototype._last_mouse_event_x = 0;
+
+    Sequencer_controller.prototype._last_mouse_event_y = 0;
+
+    Sequencer_controller.prototype._last_grid_x = 0;
+
+    Sequencer_controller.prototype._last_grid_y = 0;
+
     Sequencer_controller.prototype.mouse_move = function(event, layer_name) {
-      var x, y, _ref;
-      _ref = rel_mouse_coords(event), x = _ref.x, y = _ref.y;
-      if (this._is_mouse_down) {
-        this.seek(x);
+      var gx, gy, mx, my, _ref, _ref1;
+      _ref = rel_mouse_coords(event), mx = _ref.x, my = _ref.y;
+      _ref1 = this.get_grid_coord(mx, my), gx = _ref1.x, gy = _ref1.y;
+      switch (this._mouse_mode) {
+        case "seek":
+          this.seek(gx);
+          break;
+        case "drag":
+          this.offset_x += mx - this._last_mouse_event_x;
+          this.refresh();
+      }
+      this._last_mouse_event_x = mx;
+      this._last_mouse_event_y = my;
+      this._last_grid_x = gx;
+      this._last_grid_y = gy;
+    };
+
+    Sequencer_controller.prototype.mouse_wheel = function(e) {
+      if (e.deltaY < 0) {
+        this.zoom_adjust(this.zoom_mult_wheel);
+      } else {
+        this.zoom_adjust(1 / this.zoom_mult_wheel);
       }
     };
 
@@ -485,11 +532,11 @@
       }
     };
 
-    Sequencer_controller.prototype.seek = function(x) {
+    Sequencer_controller.prototype.seek = function(gx) {
       var display_size_x, left_panel_size_x, size_x, t, ts;
       size_x = this.size_x, left_panel_size_x = this.left_panel_size_x;
       display_size_x = size_x - left_panel_size_x;
-      t = (x - left_panel_size_x) / display_size_x;
+      t = (gx - this.offset_x / this.zoom) / display_size_x;
       t = Math.max(0, t);
       t = Math.min(1, t);
       ts = t * this.model.ts_max;
@@ -501,6 +548,36 @@
       this.speed_scale = speed_scale;
       this.ts_set(this.model.ts);
       return this.com.force_update();
+    };
+
+    Sequencer_controller.prototype.get_grid_coord = function(x, y) {
+      var ret;
+      if (x == null) {
+        x = this._last_mouse_event_x;
+      }
+      if (y == null) {
+        y = this._last_mouse_event_y;
+      }
+      return ret = {
+        x: (x - this.left_panel_size_x) / this.zoom,
+        y: y
+      };
+    };
+
+    Sequencer_controller.prototype.zoom_in = function() {
+      this.zoom_adjust(this.zoom_mult_keyb);
+    };
+
+    Sequencer_controller.prototype.zoom_out = function() {
+      this.zoom_adjust(1 / this.zoom_mult_keyb);
+    };
+
+    Sequencer_controller.prototype.zoom_adjust = function(mult) {
+      var gx_1;
+      gx_1 = (this._last_mouse_event_x - this.left_panel_size_x - this.offset_x) / this.zoom;
+      this.zoom *= mult;
+      this.offset_x = this._last_mouse_event_x - this.left_panel_size_x - gx_1 * this.zoom;
+      this.refresh();
     };
 
     return Sequencer_controller;

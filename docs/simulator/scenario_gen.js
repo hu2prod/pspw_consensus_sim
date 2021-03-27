@@ -1,6 +1,6 @@
 (function() {
   window.scenario_gen = function(opt) {
-    var block_generation_duration_max, block_generation_duration_min, block_interval, block_round_count, block_start_offset, curr_node_hashrate, curr_pow, hash_count, i, idx, node, node_count, node_hashrate, node_idx, node_list, pow_diff, pow_simulation_step, pow_type_count, round_delimiter_ts_list, round_duration, round_idx, target_pow_count_per_round, ts, ts_max, _base, _i, _j, _k, _l, _len, _len1, _m, _n, _ref;
+    var block_generation_duration_max, block_generation_duration_min, block_interval, block_round_count, block_schedule_list, block_start_offset, curr_node_hashrate, curr_pow, hash_count, i, idx, node, node_count, node_hashrate, node_idx, node_list, pow_diff, pow_simulation_step, pow_type_count, prev_round_idx, round_delimiter_ts_list, round_duration, round_idx, target_pow_count_per_round, ts, ts_max, _base, _i, _j, _k, _l, _len, _len1, _m, _n, _ref;
     if (opt == null) {
       opt = {};
     }
@@ -60,6 +60,8 @@
         round_grouped_pow_list: []
       });
     }
+    block_schedule_list = [];
+    prev_round_idx = 0;
     for (ts = _k = 0; pow_simulation_step > 0 ? _k < ts_max : _k > ts_max; ts = _k += pow_simulation_step) {
       round_idx = Math.floor(ts / round_duration);
       for (_l = 0, _len = node_list.length; _l < _len; _l++) {
@@ -79,6 +81,9 @@
             node.round_grouped_pow_list[round_idx].push(curr_pow);
           }
         }
+      }
+      if (prev_round_idx !== round_idx) {
+        prev_round_idx = round_idx;
       }
     }
     for (_n = 0, _len1 = node_list.length; _n < _len1; _n++) {
