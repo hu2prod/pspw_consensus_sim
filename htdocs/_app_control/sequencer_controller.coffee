@@ -8,6 +8,7 @@ class @Sequencer_controller
   
   play_state            : false
   mode_hide_future      : true
+  speed_scale           : 1
   
   canvas_controller: (canvas_hash)->
     if canvas_hash.panel_fg
@@ -93,6 +94,7 @@ class @Sequencer_controller
     font_size_x = font_size_y/1.8 # MAGIC number
     # +1 т.к. еще иконка цвета ноды
     left_panel_text_x = (node_icon_count+1)*(node_icon_size + node_icon_pad) + node_icon_pad_left
+    display_size_x = size_x - left_panel_size_x
     
     pow_type_color_disabled = "#AAAAAA"
     
@@ -183,9 +185,21 @@ class @Sequencer_controller
     # ###################################################################################################
     
     # ###################################################################################################
+    #    round_delimiter_ts_list
+    # ###################################################################################################
+    round_id = 0
+    for delimiter_ts in @model.round_delimiter_ts_list
+      round_id++ if delimiter_ts < ts
+      x = left_panel_size_x + (delimiter_ts / @model.ts_max) * display_size_x
+      ctx.strokeStyle = "#F00"
+      ctx.beginPath()
+      ctx.moveTo x, 0.5+0
+      ctx.lineTo x, 0.5-1+size_y
+      ctx.stroke()
+    
+    # ###################################################################################################
     #    vertical scrub
     # ###################################################################################################
-    display_size_x = size_x - left_panel_size_x
     x = left_panel_size_x + (ts / @model.ts_max) * display_size_x
     x = 0.5+Math.round x
     
@@ -199,7 +213,7 @@ class @Sequencer_controller
     x = size_x - pad
     y = font_size_y
     ctx.textAlign = "right"
-    ctx.fillText "#{(ts/1000).toFixed 2}", x, y
+    ctx.fillText "round \##{round_id+1} #{(ts/1000).toFixed(2).rjust 6}", x, y
     ctx.textAlign = "left"
     
     
@@ -245,18 +259,24 @@ class @Sequencer_controller
   # ###################################################################################################
   _animation_interval : null
   start_ts : 0
+  
+  ts_set : (ts)->
+    @model.ts = ts
+    @start_ts = Date.now() - @model.ts/@speed_scale
+  
   play : ()->
     clearInterval @_animation_interval if @_animation_interval
     @play_state = true
     @com.force_update()
-    # TODO requestAnimationFrame
+    
     if @model.ts == @model.ts_max
       @start_ts = Date.now()
     else
-      @start_ts = Date.now() - @model.ts
+      @ts_set @model.ts
     
+    # TODO requestAnimationFrame
     @_animation_interval = setInterval ()=>
-      ts = Date.now() - @start_ts
+      ts = (Date.now() - @start_ts)*@speed_scale
       if ts >= @model.ts_max
         ts = @model.ts_max
         @stop() # redraw final frame and stop
@@ -285,6 +305,10 @@ class @Sequencer_controller
     t = Math.max 0, t
     t = Math.min 1, t
     ts = t * @model.ts_max
-    @model.ts = ts
-    @play()
+    @ts_set ts
+    @refresh()
   
+  speed_scale_set : (speed_scale)->
+    puts speed_scale
+    @speed_scale = speed_scale
+    @ts_set @model.ts

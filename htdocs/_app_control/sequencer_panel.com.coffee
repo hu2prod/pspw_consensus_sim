@@ -6,6 +6,9 @@ module.exports =
     @controller.model = {
       ts      : 0
       ts_max  : 5000
+      round_delimiter_ts_list : [
+        2000
+      ]
       node_list : [
         {
           title : "Node 1"
@@ -97,14 +100,29 @@ module.exports =
     }
       tbody
         tr
-          td
+          td {
+            style :
+              width : 100
+          }
             Button {
-              label : if @controller.play_state then "stop" else "play"
+              label : if @controller.play_state then "Stop" else "Play"
               on_click : ()=>
                 @controller.toggle_play()
             }
+          td {
+            style:
+              color : "#777"
+          }, "If you focus timeline you can use some hotkeys"
+            
         tr
-          td
+          td "Speed"
+          td Number_input {
+            value : @controller.speed_scale
+            on_change : (speed_scale)=>
+              @controller.speed_scale_set speed_scale
+          }
+        tr
+          td {colSpan : 2}
             Canvas_multi {
               width       : size_x
               height      : size_y
