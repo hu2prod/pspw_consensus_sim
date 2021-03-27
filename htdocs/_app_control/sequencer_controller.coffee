@@ -14,6 +14,7 @@ class @Sequencer_controller
   display_tx_pow_src_lines : true
   speed_scale           : 100
   show_help             : false
+  autotrack             : false
   speed_step            : 0.1
   
   zoom                  : 1
@@ -465,6 +466,11 @@ class @Sequencer_controller
         @stop() # redraw final frame and stop
       
       @model.ts = ts
+      if @autotrack
+        display_size_x = (@size_x - @left_panel_size_x)
+        # 1px =
+        ts_to_px = display_size_x/@model.ts_max
+        @offset_x = display_size_x/2 - @zoom * ts * ts_to_px
       
       @refresh()
     , 10

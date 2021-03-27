@@ -88,6 +88,15 @@ module.exports =
               @force_update()
           }
         tr
+          td "autotrack"
+          td Checkbox {
+            value     : @controller.autotrack
+            on_change : (autotrack)=>
+              @controller.autotrack = autotrack
+              @controller.refresh()
+              @force_update()
+          }
+        tr
           td {colSpan : 2}
             Canvas_multi {
               width       : size_x
